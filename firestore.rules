@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: is the requester authenticated?
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: is the requester the owner of the user doc?
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // Helper: is the requester a member of the given family?
+    function isFamilyMember(familyId) {
+      return isAuth() &&
+        request.auth.uid in get(/databases/$(database)/documents/families/$(familyId)).data.members;
+    }
+
+    // ─── Users ───────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isAuth();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid);
+    }
+
+    // ─── Families ─────────────────────────────────────────────────────────────
+    match /families/{familyId} {
+      allow read: if isFamilyMember(familyId);
+      allow create: if isAuth();
+      allow update: if isFamilyMember(familyId);
+
+      // Shopping List
+      match /shoppingList/{itemId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      // Home Wishlist
+      match /homeWishlist/{itemId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      // Shared Wishlist
+      match /sharedWishlist/{itemId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      // Calendar Events
+      match /events/{eventId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+
+      // Shared Notes
+      match /notes/{noteId} {
+        allow read, write: if isFamilyMember(familyId);
+      }
+    }
+
+    // ─── Personal Wishlists ───────────────────────────────────────────────────
+    match /users/{uid}/wishlist/{itemId} {
+      // Owner can read/write
+      allow read, write: if isOwner(uid);
+
+      // Partner can read (for sharing feature)
+      allow read: if isAuth() && (
+        // allow if they are in the same family
+        exists(/databases/$(database)/documents/users/$(uid)) &&
+        get(/databases/$(database)/documents/users/$(uid)).data.familyId != null &&
+        request.auth.uid in get(
+          /databases/$(database)/documents/families/$(
+            get(/databases/$(database)/documents/users/$(uid)).data.familyId
+          )
+        ).data.members
+      );
+    }
+  }
+}
