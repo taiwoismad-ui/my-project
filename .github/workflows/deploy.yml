@@ -2,7 +2,9 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/add-background-music-6OwRG]
+    branches:
+      - claude/add-background-music-6OwRG
+      - claude/family-planner-app-f2qBo
   workflow_dispatch:
 
 permissions:
@@ -12,8 +14,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout birthday site
         uses: actions/checkout@v4
+        with:
+          ref: claude/add-background-music-6OwRG
+
+      - name: Add family planner to /planner subfolder
+        run: |
+          git fetch origin claude/family-planner-app-f2qBo
+          mkdir -p planner
+          git show origin/claude/family-planner-app-f2qBo:index.html > planner/index.html
 
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
