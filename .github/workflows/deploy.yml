@@ -1,10 +1,7 @@
-name: Deploy to GitHub Pages
+name: Deploy all projects to GitHub Pages
 
 on:
   push:
-    branches:
-      - claude/add-background-music-6OwRG
-      - claude/family-planner-app-f2qBo
   workflow_dispatch:
 
 permissions:
@@ -14,20 +11,60 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout birthday site
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: claude/add-background-music-6OwRG
 
-      - name: Add family planner to /planner subfolder
+      - name: Build site from all projects
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git fetch origin claude/family-planner-app-f2qBo
-          mkdir -p planner
-          git show origin/claude/family-planner-app-f2qBo:index.html > planner/index.html
+          set -e
+
+          # Fetch projects.json from main branch
+          curl -sf \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/contents/projects.json?ref=main" \
+            -o projects.json
+
+          echo "Projects config:"
+          cat projects.json | jq .
+
+          mkdir -p _site
+          touch _site/.nojekyll
+
+          # Clone each project branch and copy to its subfolder
+          jq -r 'to_entries[] | "\(.key)\t\(.value)"' projects.json | \
+          while IFS=$'\t' read -r deploy_path branch; do
+            echo ""
+            echo "==> $branch  →  /$deploy_path"
+
+            git clone --depth 1 \
+              --branch "$branch" \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              _tmp
+
+            if [ "$deploy_path" = "root" ]; then
+              dest="_site"
+            else
+              dest="_site/$deploy_path"
+              mkdir -p "$dest"
+            fi
+
+            find _tmp -mindepth 1 -maxdepth 1 \
+              ! -name '.git' ! -name '.github' ! -name '.gitignore' \
+              -exec cp -rp {} "$dest/" \;
+
+            rm -rf _tmp
+          done
+
+          echo ""
+          echo "Site structure:"
+          find _site -type f | sort
 
       - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: .
+          folder: _site
           clean: true
