@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>С Днём Рождения, Натаха! 🎉</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #FF6B9D;
+      --gold: #FFD700;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #0a0005;
+      color: #fff;
+    }
+
+    body.locked { overflow: hidden; height: 100vh; }
+
+    /* ── PASSWORD OVERLAY ── */
+    #pw-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 50% 40%, #3d0030 0%, #1a0010 55%, #0a0005 100%);
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    #pw-overlay.hide { opacity: 0; visibility: hidden; }
+
+    .stars-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .star-dot {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: twinkle 2s ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: 0.1; transform: scale(0.7); }
+      to   { opacity: 1;   transform: scale(1.4); }
+    }
+
+    .corner {
+      position: absolute;
+      font-size: 2.2rem;
+      opacity: 0.35;
+      pointer-events: none;
+      animation: spin 10s linear infinite;
+    }
+    .corner.tl { top: 18px; left: 18px; }
+    .corner.tr { top: 18px; right: 18px; animation-direction: reverse; }
+    .corner.bl { bottom: 18px; left: 18px; animation-direction: reverse; }
+    .corner.br { bottom: 18px; right: 18px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .pw-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .pw-icon {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 1.2rem;
+      animation: pw-bounce 2.2s ease-in-out infinite;
+    }
+    @keyframes pw-bounce {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      30%     { transform: translateY(-14px) rotate(-6deg); }
+      60%     { transform: translateY(-6px)  rotate(5deg); }
+    }
+
+    .pw-q {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.3rem, 5vw, 2rem);
+      color: var(--gold);
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 28px rgba(255,215,0,.5);
+    }
+
+    .pw-sub {
+      font-size: .8rem;
+      color: rgba(255,107,157,.7);
+      margin-bottom: 2rem;
+      letter-spacing: .06em;
+    }
+
+    .pw-boxes {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .pw-box {
+      width: 54px;
+      height: 62px;
+      border: 2px solid rgba(255,107,157,.55);
+      border-radius: 12px;
+      background: rgba(255,107,157,.07);
+      color: #fff;
+      font-size: 1.7rem;
+      font-weight: 700;
+      font-family: 'Montserrat', sans-serif;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color .25s, background .25s, box-shadow .25s;
+      -webkit-appearance: none;
+      caret-color: var(--gold);
+    }
+    @media (max-width: 380px) {
+      .pw-box { width: 46px; height: 54px; font-size: 1.35rem; }
+      .pw-boxes { gap: 7px; }
+    }
+    .pw-box:focus {
+      border-color: var(--gold);
+      background: rgba(255,215,0,.1);
+      box-shadow: 0 0 16px rgba(255,215,0,.35);
+    }
+    .pw-box.filled  { border-color: var(--pink); background: rgba(255,107,157,.15); }
+    .pw-box.wrong   {
+      border-color: #ff4444 !important;
+      background: rgba(255,68,68,.15) !important;
+      box-shadow: 0 0 10px rgba(255,68,68,.3) !important;
+      animation: pw-shake .5s ease;
+    }
+    .pw-box.correct {
+      border-color: #44dd88 !important;
+      background: rgba(68,221,136,.2) !important;
+      box-shadow: 0 0 14px rgba(68,221,136,.4) !important;
+    }
+    @keyframes pw-shake {
+      0%,100% { transform: translateX(0); }
+      15%,55%,85% { transform: translateX(-7px); }
+      35%,70%     { transform: translateX(7px); }
+    }
+
+    .pw-msg {
+      min-height: 1.4rem;
+      font-size: .88rem;
+      color: #ff7777;
+      font-weight: 500;
+    }
+
+    /* ── MAIN SITE ── */
+    #site {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .6s ease;
+    }
+    #site.visible { opacity: 1; pointer-events: auto; }
+
+    /* ── MUSIC BUTTON ── */
+    #music-btn {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 800;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,215,0,.7);
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: transform .3s, opacity .3s, border-color .3s;
+    }
+    #music-btn:hover { transform: scale(1.1); }
+    #music-btn.off { border-color: rgba(255,107,157,.4); opacity: .6; }
+
+    /* ── PLAY FALLBACK BANNER ── */
+    #play-banner {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 800;
+      display: none;
+      white-space: nowrap;
+    }
+    #play-banner.show { display: block; }
+
+    #play-banner button {
+      background: linear-gradient(135deg, var(--pink) 0%, #ff9f43 100%);
+      border: none;
+      border-radius: 26px;
+      padding: 13px 26px;
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 22px rgba(255,107,157,.5);
+      animation: banner-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes banner-pulse {
+      0%,100% { box-shadow: 0 4px 22px rgba(255,107,157,.5); transform: scale(1); }
+      50%     { box-shadow: 0 6px 32px rgba(255,107,157,.8); transform: scale(1.03); }
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .s-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    @media (min-width: 769px) {
+      .s-bg { background-attachment: fixed; }
+    }
+
+    .s-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+    }
+
+    .s-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      width: 92%;
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+    }
+
+    /* ── CONGRATS TEXT ── */
+    .ct-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 5vw, 2.3rem);
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1.3;
+      margin-bottom: 2rem;
+      text-shadow: 0 0 30px rgba(255,215,0,.55);
+    }
+
+    .ct-p {
+      font-size: clamp(.88rem, 2.3vw, 1.02rem);
+      line-height: 1.9;
+      color: rgba(255,255,255,.93);
+      margin-bottom: 1.3rem;
+      text-shadow: 0 1px 4px rgba(0,0,0,.75);
+    }
+
+    .ct-wishes {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1rem, 3vw, 1.25rem);
+      color: var(--gold);
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    .ct-list {
+      list-style: none;
+      text-align: left;
+      margin: 0 auto 1.5rem;
+      max-width: 660px;
+    }
+    .ct-list li {
+      font-size: clamp(.88rem, 2.3vw, 1.02rem);
+      line-height: 1.9;
+      color: rgba(255,255,255,.93);
+      margin-bottom: .5rem;
+      padding-left: 2rem;
+      position: relative;
+      text-shadow: 0 1px 4px rgba(0,0,0,.75);
+    }
+    .ct-list li .n {
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .ct-final {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* Section photo backgrounds */
+    #s1 .s-bg { background-image: url('assets/photo1.jpg'); }
+    #s2 .s-bg { background-image: url('assets/photo2.jpg'); }
+    #s3 .s-bg { background-image: url('assets/photo3.jpg'); }
+
+    /* Birthday headline */
+    .bday-line {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 6vw, 3.2rem);
+      font-weight: 900;
+      color: var(--gold);
+      margin-top: 3rem;
+      padding: 1rem .5rem;
+      text-shadow: 0 0 40px rgba(255,215,0,.85), 0 2px 8px rgba(0,0,0,.6);
+      animation: heartbeat 1.4s ease-in-out infinite;
+    }
+    @keyframes heartbeat {
+      0%   { transform: scale(1); }
+      14%  { transform: scale(1.07); }
+      28%  { transform: scale(.97); }
+      42%  { transform: scale(1.05); }
+      70%  { transform: scale(1); }
+    }
+
+    /* Fade-in items */
+    .fi {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .fi.in { opacity: 1; transform: translateY(0); }
+
+    /* Divider */
+    .divider {
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--pink) 70%, transparent 100%);
+    }
+  </style>
+</head>
+<body class="locked">
+
+<!-- ═══════════════════ PASSWORD ═══════════════════ -->
+<div id="pw-overlay">
+  <div class="stars-bg" id="stars-bg"></div>
+
+  <span class="corner tl">🌸</span>
+  <span class="corner tr">🌸</span>
+  <span class="corner bl">💛</span>
+  <span class="corner br">💛</span>
+
+  <div class="pw-inner">
+    <span class="pw-icon">🎂</span>
+    <h1 class="pw-q">Кто твой лучший друг?</h1>
+    <p class="pw-sub">введи ответ — 5 букв</p>
+    <div class="pw-boxes" id="pw-boxes">
+      <input class="pw-box" type="text" inputmode="text" maxlength="2"
+             autocomplete="off" autocorrect="off" autocapitalize="characters"
+             spellcheck="false" data-i="0">
+      <input class="pw-box" type="text" inputmode="text" maxlength="2"
+             autocomplete="off" autocorrect="off" autocapitalize="characters"
+             spellcheck="false" data-i="1">
+      <input class="pw-box" type="text" inputmode="text" maxlength="2"
+             autocomplete="off" autocorrect="off" autocapitalize="characters"
+             spellcheck="false" data-i="2">
+      <input class="pw-box" type="text" inputmode="text" maxlength="2"
+             autocomplete="off" autocorrect="off" autocapitalize="characters"
+             spellcheck="false" data-i="3">
+      <input class="pw-box" type="text" inputmode="text" maxlength="2"
+             autocomplete="off" autocorrect="off" autocapitalize="characters"
+             spellcheck="false" data-i="4">
+    </div>
+    <div class="pw-msg" id="pw-msg"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN SITE ═══════════════════ -->
+<div id="site">
+
+  <button id="music-btn" aria-label="Музыка вкл/выкл">🎵</button>
+  <div id="play-banner">
+    <button id="play-banner-btn">▶ Нажми, чтобы включить музыку</button>
+  </div>
+
+  <!-- ── SECTION 1 ── -->
+  <section class="section" id="s1">
+    <div class="s-bg"></div>
+    <div class="s-overlay"></div>
+    <div class="s-content">
+      <h2 class="ct-title fi">Натах, с днюхой, джаным! 🎉</h2>
+
+      <p class="ct-p fi">Слушай сюда, дорогая. Ты, конечно, симпатичная, но это мы и так знаем. Ты — ебашь-машина, реактивный двигатель в юбке, который забыл про тормоза. Ты как «Папа Карло» на красном примусе: если ты на минуту остановишься — вся твоя многоэтажка рухнет.</p>
+
+      <p class="ct-p fi">У тебя же график, бля, как у президента маленькой страны:<br>
+      — Ребёнка воспитать (чтоб не убила, уже подвиг).<br>
+      — Маникюрный салон свой мутить, где девки красивее становятся.<br>
+      — Две собаки и кошка? Это уже табор, а не дом! Ты их покорми, помой, рассуди, кто кого укусил.<br>
+      — Мужа... Бедный твой муж. Давай честно: без тебя он бы уже три раза в психушку съехал с голодухой и в носках разного цвета. Ты его держишь в тонусе, он без тебя бы ахуел по-настоящему.</p>
+
+      <p class="ct-p fi">И вы еще дом хотите больше строить? Ты что, Натаха, железнодорожный вокзал открываешь? Чтобы там и твои «пиздатые друзья» — Димон (красавчик, между прочим), и Катюха (тоже красавица) — могли приехать с шашлыками и не вылазить оттуда сутками? Одобряю.</p>
+
+      <p class="ct-wishes fi">Короче, желаю тебе:</p>
+
+      <ol class="ct-list fi">
+        <li><span class="n">1.</span>Чтобы энергия у тебя была, как у атомной станции Фукусима, но без аварий.</li>
+        <li><span class="n">2.</span>Чтобы в салоне клиенты не ныли, а несли бабло мешками.</li>
+        <li><span class="n">3.</span>Чтобы дома муж иногда тебе говорил: «Сиди, Натаха, я сам все сделаю», — а ты бы тихонечко ржала, потому что знаешь — нихуя он не сделает.</li>
+        <li><span class="n">4.</span>Здоровья, потому что такое количество движухи без здоровья сдохнешь, как мамонт.</li>
+        <li><span class="n">5.</span>Чтобы кошка с собаками объявили перемирие хотя бы на день твоего рождения.</li>
+      </ol>
+
+      <p class="ct-p fi">Ты — скала, Натаха. С тебя, блядь, иконы писать можно с надписью: «Покровительница всех, кто ебёт этот мир». Любим тебя с Катюхой. Если что — зови, приедем, поможем. Ну... хотя бы выпьем за тебя.</p>
+
+      <p class="ct-p fi"><span class="ct-final">С днём рождения, ёпта! Бампер тебе в жизни не целовать, нервы — железные, а кошелек — толстый. ❤️</span></p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── SECTION 2 ── -->
+  <section class="section" id="s2">
+    <div class="s-bg"></div>
+    <div class="s-overlay"></div>
+    <div class="s-content">
+      <h2 class="ct-title fi">Натах, с днюхой, джаным! 🎉</h2>
+
+      <p class="ct-p fi">Слушай сюда, дорогая. Ты, конечно, симпатичная, но это мы и так знаем. Ты — ебашь-машина, реактивный двигатель в юбке, который забыл про тормоза. Ты как «Папа Карло» на красном примусе: если ты на минуту остановишься — вся твоя многоэтажка рухнет.</p>
+
+      <p class="ct-p fi">У тебя же график, бля, как у президента маленькой страны:<br>
+      — Ребёнка воспитать (чтоб не убила, уже подвиг).<br>
+      — Маникюрный салон свой мутить, где девки красивее становятся.<br>
+      — Две собаки и кошка? Это уже табор, а не дом! Ты их покорми, помой, рассуди, кто кого укусил.<br>
+      — Мужа... Бедный твой муж. Давай честно: без тебя он бы уже три раза в психушку съехал с голодухой и в носках разного цвета. Ты его держишь в тонусе, он без тебя бы ахуел по-настоящему.</p>
+
+      <p class="ct-p fi">И вы еще дом хотите больше строить? Ты что, Натаха, железнодорожный вокзал открываешь? Чтобы там и твои «пиздатые друзья» — Димон (красавчик, между прочим), и Катюха (тоже красавица) — могли приехать с шашлыками и не вылазить оттуда сутками? Одобряю.</p>
+
+      <p class="ct-wishes fi">Короче, желаю тебе:</p>
+
+      <ol class="ct-list fi">
+        <li><span class="n">1.</span>Чтобы энергия у тебя была, как у атомной станции Фукусима, но без аварий.</li>
+        <li><span class="n">2.</span>Чтобы в салоне клиенты не ныли, а несли бабло мешками.</li>
+        <li><span class="n">3.</span>Чтобы дома муж иногда тебе говорил: «Сиди, Натаха, я сам все сделаю», — а ты бы тихонечко ржала, потому что знаешь — нихуя он не сделает.</li>
+        <li><span class="n">4.</span>Здоровья, потому что такое количество движухи без здоровья сдохнешь, как мамонт.</li>
+        <li><span class="n">5.</span>Чтобы кошка с собаками объявили перемирие хотя бы на день твоего рождения.</li>
+      </ol>
+
+      <p class="ct-p fi">Ты — скала, Натаха. С тебя, блядь, иконы писать можно с надписью: «Покровительница всех, кто ебёт этот мир». Любим тебя с Катюхой. Если что — зови, приедем, поможем. Ну... хотя бы выпьем за тебя.</p>
+
+      <p class="ct-p fi"><span class="ct-final">С днём рождения, ёпта! Бампер тебе в жизни не целовать, нервы — железные, а кошелек — толстый. ❤️</span></p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ── SECTION 3 ── -->
+  <section class="section" id="s3">
+    <div class="s-bg"></div>
+    <div class="s-overlay"></div>
+    <div class="s-content">
+      <h2 class="ct-title fi">Натах, с днюхой, джаным! 🎉</h2>
+
+      <p class="ct-p fi">Слушай сюда, дорогая. Ты, конечно, симпатичная, но это мы и так знаем. Ты — ебашь-машина, реактивный двигатель в юбке, который забыл про тормоза. Ты как «Папа Карло» на красном примусе: если ты на минуту остановишься — вся твоя многоэтажка рухнет.</p>
+
+      <p class="ct-p fi">У тебя же график, бля, как у президента маленькой страны:<br>
+      — Ребёнка воспитать (чтоб не убила, уже подвиг).<br>
+      — Маникюрный салон свой мутить, где девки красивее становятся.<br>
+      — Две собаки и кошка? Это уже табор, а не дом! Ты их покорми, помой, рассуди, кто кого укусил.<br>
+      — Мужа... Бедный твой муж. Давай честно: без тебя он бы уже три раза в психушку съехал с голодухой и в носках разного цвета. Ты его держишь в тонусе, он без тебя бы ахуел по-настоящему.</p>
+
+      <p class="ct-p fi">И вы еще дом хотите больше строить? Ты что, Натаха, железнодорожный вокзал открываешь? Чтобы там и твои «пиздатые друзья» — Димон (красавчик, между прочим), и Катюха (тоже красавица) — могли приехать с шашлыками и не вылазить оттуда сутками? Одобряю.</p>
+
+      <p class="ct-wishes fi">Короче, желаю тебе:</p>
+
+      <ol class="ct-list fi">
+        <li><span class="n">1.</span>Чтобы энергия у тебя была, как у атомной станции Фукусима, но без аварий.</li>
+        <li><span class="n">2.</span>Чтобы в салоне клиенты не ныли, а несли бабло мешками.</li>
+        <li><span class="n">3.</span>Чтобы дома муж иногда тебе говорил: «Сиди, Натаха, я сам все сделаю», — а ты бы тихонечко ржала, потому что знаешь — нихуя он не сделает.</li>
+        <li><span class="n">4.</span>Здоровья, потому что такое количество движухи без здоровья сдохнешь, как мамонт.</li>
+        <li><span class="n">5.</span>Чтобы кошка с собаками объявили перемирие хотя бы на день твоего рождения.</li>
+      </ol>
+
+      <p class="ct-p fi">Ты — скала, Натаха. С тебя, блядь, иконы писать можно с надписью: «Покровительница всех, кто ебёт этот мир». Любим тебя с Катюхой. Если что — зови, приедем, поможем. Ну... хотя бы выпьем за тебя.</p>
+
+      <p class="ct-p fi"><span class="ct-final">С днём рождения, ёпта! Бампер тебе в жизни не целовать, нервы — железные, а кошелек — толстый. ❤️</span></p>
+
+      <div class="bday-line fi">С Днём Рождения, Натаха! ❤️</div>
+    </div>
+  </section>
+
+</div><!-- #site -->
+
+<!-- Audio -->
+<audio id="bg-music" loop preload="auto">
+  <source src="assets/music.mp3" type="audio/mpeg">
+</audio>
+<audio id="speech-audio" preload="auto">
+  <source src="assets/speech.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+/* ── STARS ── */
+(function() {
+  var bg = document.getElementById('stars-bg');
+  for (var i = 0; i < 110; i++) {
+    var s = document.createElement('div');
+    s.className = 'star-dot';
+    var sz = (1 + Math.random() * 3).toFixed(1);
+    s.style.cssText =
+      'left:' + (Math.random()*100).toFixed(1) + '%;' +
+      'top:'  + (Math.random()*100).toFixed(1) + '%;' +
+      'width:' + sz + 'px;height:' + sz + 'px;' +
+      'animation-delay:' + (Math.random()*3).toFixed(2) + 's;' +
+      'animation-duration:' + (1.5+Math.random()*2.5).toFixed(2) + 's;';
+    bg.appendChild(s);
+  }
+})();
+
+/* ── PASSWORD ── */
+var ANSWER   = ['Д','И','М','О','Н'];
+var LAT2CYR  = {D:'Д',I:'И',M:'М',O:'О',N:'Н'};
+
+function normChar(c) {
+  c = c.toUpperCase();
+  return LAT2CYR[c] || c;
+}
+
+var pwInputs = Array.from(document.querySelectorAll('.pw-box'));
+var pwMsg    = document.getElementById('pw-msg');
+
+setTimeout(function(){ pwInputs[0].focus(); }, 350);
+
+pwInputs.forEach(function(inp, i) {
+
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      if (inp.value) {
+        inp.value = '';
+        inp.classList.remove('filled');
+      } else if (i > 0) {
+        pwInputs[i-1].value = '';
+        pwInputs[i-1].classList.remove('filled');
+        pwInputs[i-1].focus();
+      }
+    } else if (e.key === 'ArrowLeft'  && i > 0) { pwInputs[i-1].focus(); }
+      else if (e.key === 'ArrowRight' && i < 4) { pwInputs[i+1].focus(); }
+  });
+
+  inp.addEventListener('input', function() {
+    var raw = inp.value;
+    if (!raw) { inp.classList.remove('filled'); return; }
+    var ch = normChar(raw.slice(-1));
+    inp.value = ch;
+    inp.classList.toggle('filled', !!ch);
+    if (ch) {
+      if (i < 4) { pwInputs[i+1].focus(); }
+      else       { checkPw(); }
+    }
+  });
+});
+
+function checkPw() {
+  var vals = pwInputs.map(function(b){ return b.value.trim(); });
+  if (vals.some(function(v){ return !v; })) return;
+
+  var ok = vals.every(function(v, i){ return normChar(v) === ANSWER[i]; });
+
+  if (ok) {
+    pwInputs.forEach(function(b){
+      b.classList.remove('wrong'); b.classList.add('correct');
+    });
+    setTimeout(doUnlock, 700);
+  } else {
+    pwMsg.textContent = '❌ Подумай ещё... может, это не собака?';
+    pwInputs.forEach(function(b){
+      b.classList.remove('correct','wrong');
+      void b.offsetWidth;        /* restart animation */
+      b.classList.add('wrong');
+    });
+    setTimeout(function(){
+      pwInputs.forEach(function(b){
+        b.classList.remove('wrong');
+        b.value = '';
+        b.classList.remove('filled');
+      });
+      pwMsg.textContent = '';
+      pwInputs[0].focus();
+    }, 700);
+  }
+}
+
+function doUnlock() {
+  document.body.classList.remove('locked');
+  var overlay = document.getElementById('pw-overlay');
+  overlay.classList.add('hide');
+  var site = document.getElementById('site');
+  site.classList.add('visible');
+  var musicBtn = document.getElementById('music-btn');
+  musicBtn.style.display = 'flex';
+  setTimeout(function(){ overlay.remove(); }, 900);
+  tryAutoplay();
+}
+
+/* ── AUDIO ── */
+var bgMusic     = document.getElementById('bg-music');
+var speechAudio = document.getElementById('speech-audio');
+var isMusicOn   = false;
+var speechDone  = false;
+
+function tryAutoplay() {
+  var p = bgMusic.play();
+  if (p !== undefined) {
+    p.then(function(){
+      isMusicOn = true;
+      setTimeout(function(){
+        var sp = speechAudio.play();
+        if (sp !== undefined) sp.then(function(){ speechDone = true; }).catch(function(){});
+      }, 800);
+    }).catch(function(){
+      document.getElementById('play-banner').classList.add('show');
+    });
+  }
+}
+
+document.getElementById('play-banner-btn').addEventListener('click', function(){
+  bgMusic.play();
+  isMusicOn = true;
+  if (!speechDone) { speechAudio.play(); speechDone = true; }
+  document.getElementById('play-banner').classList.remove('show');
+  var btn = document.getElementById('music-btn');
+  btn.textContent = '🎵';
+  btn.classList.remove('off');
+});
+
+document.getElementById('music-btn').addEventListener('click', function(){
+  var btn = document.getElementById('music-btn');
+  if (isMusicOn) {
+    bgMusic.pause();
+    isMusicOn = false;
+    btn.textContent = '🔇';
+    btn.classList.add('off');
+  } else {
+    bgMusic.play();
+    isMusicOn = true;
+    btn.textContent = '🎵';
+    btn.classList.remove('off');
+  }
+});
+
+/* ── INTERSECTION OBSERVER ── */
+var confettiFired = false;
+
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (!entry.isIntersecting) return;
+
+    if (entry.target.id === 's1' && !confettiFired) {
+      confettiFired = true;
+      launchConfetti();
+    }
+
+    var items = entry.target.querySelectorAll('.fi');
+    items.forEach(function(el, idx){
+      setTimeout(function(){ el.classList.add('in'); }, idx * 155);
+    });
+
+    observer.unobserve(entry.target);
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.section').forEach(function(s){ observer.observe(s); });
+
+function launchConfetti() {
+  var end    = Date.now() + 3600;
+  var colors = ['#FF6B9D','#FFD700','#ff4757','#ffffff','#c44dff','#ff9f43'];
+  (function shoot(){
+    confetti({ particleCount:5, angle:58,  spread:65, origin:{x:0,   y:.65}, colors:colors });
+    confetti({ particleCount:5, angle:122, spread:65, origin:{x:1,   y:.65}, colors:colors });
+    confetti({ particleCount:3, angle:90,  spread:90, origin:{x:.5,  y:0  }, colors:colors });
+    if (Date.now() < end) requestAnimationFrame(shoot);
+  })();
+}
+</script>
+</body>
+</html>
