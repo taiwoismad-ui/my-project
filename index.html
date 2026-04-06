@@ -249,6 +249,33 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6}
 ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
 .url-row{display:flex;gap:7px;margin-bottom:12px}
 .url-row .inp{flex:1;margin:0}
+/* ── ALIASES (JS ↔ CSS) ── */
+.modal-handle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:12px auto 18px}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px}
+.modal-acts{display:flex;gap:8px;margin-top:18px}
+.modal-acts .btn{flex:1}
+.checkbox{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;font-size:11px;color:transparent;background:transparent}
+.checkbox.on{background:var(--gr);border-color:var(--gr);color:#fff}
+.shop-item.checked{opacity:.5}
+.shop-item.checked .shop-name{text-decoration:line-through;color:var(--t3)}
+.color-swatch{width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:transform .12s;border:3px solid transparent}
+.color-swatch:hover{transform:scale(1.1)}
+.color-swatch.on{border-color:rgba(255,255,255,.5)}
+.cal-day.other-month{color:var(--t3)}
+.cal-day.today{color:var(--ac);font-weight:700}
+.cal-day.selected{background:var(--ac)!important;color:#fff!important}
+.notes-filters{display:flex;gap:6px;padding:10px 24px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bd);flex-shrink:0}
+.notes-filters::-webkit-scrollbar{display:none}
+@media(max-width:767px){.notes-filters{padding:8px 12px}}
+.note-card-top{display:flex;align-items:center;justify-content:space-between}
+.note-cat-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.wish-card-thumb{width:100%;height:100px;background:var(--acl2);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
+.wish-card-thumb img{width:100%;height:100%;object-fit:cover}
+.wish-title{flex:1;font-size:14px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wish-url{font-size:11px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.cal-month{font-size:15px;font-weight:700}
+.cal-desktop{margin-bottom:16px}
+@media(min-width:900px){.cal-desktop{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}}
 </style>
 </head>
 <body>
@@ -276,3 +303,626 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6}
   </div>
 </div>
 <div id="mroot"></div>
+<script>
+// ── CONFIG ──
+const COLORS=['#7C5CF6','#F472B6','#34D399','#FBBF24','#60A5FA','#F87171','#FB923C','#A78BFA'];
+const NCATS={
+  food:  {l:'Что поесть',       i:'🍽️',c:'#F59E0B'},
+  watch: {l:'Что посмотреть',   i:'🎬',c:'#8B5CF6'},
+  places:{l:'Куда сходить',     i:'📍',c:'#60A5FA'},
+  talk:  {l:'О чём поговорить', i:'💬',c:'#34D399'},
+  other: {l:'Другое',           i:'📄',c:'#6B7280'},
+};
+const WTABS=[
+  {id:'dima', l:'Дима',     ic:'👤',store:'wdima'},
+  {id:'katya',l:'Катя',     ic:'👤',store:'wkatya'},
+  {id:'home', l:'Для дома', ic:'🏡',store:'whome'},
+  {id:'max',  l:'Для Макса',ic:'👶',store:'wmax'},
+];
+const REC={none:'Без повтора',weekly:'Еженедельно',monthly:'Ежемесячно'};
+const PRI={want:'🔥 Очень хочу',some:'⭐ Когда-нибудь'};
+const PRI_C={want:'#F87171',some:'#FBBF24'};
+const MO=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DOW=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+// ── STORAGE ──
+const DB={
+  get(k,d=null){try{const v=localStorage.getItem('fp_'+k);return v!==null?JSON.parse(v):d}catch{return d}},
+  set(k,v){try{localStorage.setItem('fp_'+k,JSON.stringify(v))}catch{}}
+};
+
+// ── STATE ──
+let U=DB.get('users',[]);
+let CU=DB.get('cuid',null);
+let SH=DB.get('shop',[]);
+let EV=DB.get('events',[]);
+let NO=DB.get('notes',[]);
+let WD={
+  dima: DB.get('wdima',[]),
+  katya:DB.get('wkatya',[]),
+  home: DB.get('whome',[]),
+  max:  DB.get('wmax',[]),
+};
+let tab='shopping', wstab='dima', nfilt='all';
+let calY=new Date().getFullYear(), calM=new Date().getMonth(), calSel=null;
+let modalStack=[];
+
+// ── UTILS ──
+let _ic=Date.now();
+const gid=()=>(++_ic).toString(36);
+const today=()=>new Date().toISOString().slice(0,10);
+const ini=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+function av(u,sz=34){
+  const fs=Math.round(sz*.38);
+  return `<span class="av" style="width:${sz}px;height:${sz}px;background:${u.color};font-size:${fs}px">${ini(u.name)}</span>`;
+}
+function priBadge(p){
+  const c=p==='want'?'rgba(248,113,113,.2)':'rgba(251,191,36,.2)';
+  const tc=p==='want'?'#F87171':'#FBBF24';
+  return `<span class="badge" style="background:${c};color:${tc}">${PRI[p]||p}</span>`;
+}
+function fmtDate(ds){
+  if(!ds)return'';
+  return new Date(ds+'T12:00').toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+}
+function timeAgo(iso){
+  const m=Math.floor((Date.now()-new Date(iso))/60000);
+  if(m<1)return'только что';
+  if(m<60)return m+' мин. назад';
+  const h=Math.floor(m/60);
+  if(h<24)return h+' ч. назад';
+  return Math.floor(h/24)+' дн. назад';
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2400);
+}
+function save(k){
+  const m={users:()=>DB.set('users',U),cuid:()=>DB.set('cuid',CU),
+    shop:()=>DB.set('shop',SH),events:()=>DB.set('events',EV),notes:()=>DB.set('notes',NO),
+    wdima:()=>DB.set('wdima',WD.dima),wkatya:()=>DB.set('wkatya',WD.katya),
+    whome:()=>DB.set('whome',WD.home),wmax:()=>DB.set('wmax',WD.max)};
+  m[k]&&m[k]();
+}
+const cu=()=>U.find(u=>u.id===CU)||null;
+const partner=()=>U.find(u=>u.id!==CU)||null;
+
+// ── MODAL ──
+function openModal(html,cb){
+  const ov=document.createElement('div');
+  ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal-sheet"><div class="modal-handle"></div>${html}</div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)closeModal()});
+  document.getElementById('mroot').appendChild(ov);
+  modalStack.push(ov);
+  if(cb)setTimeout(()=>cb(ov),30);
+  setTimeout(()=>{const i=ov.querySelector('input,textarea');if(i)i.focus()},60);
+}
+function closeModal(){const o=modalStack.pop();if(o)o.remove()}
+
+// ── ROUTING ──
+function goTab(t){
+  tab=t;
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='tp-'+t));
+  renderSbUser();
+  renderTab(t);
+}
+function renderTab(t){
+  const fn={shopping:rShopping,wishlist:rWishlist,calendar:rCalendar,notes:rNotes,profile:rProfile};
+  const el=document.getElementById('tp-'+t);
+  if(el&&fn[t])el.innerHTML=fn[t]();
+}
+function renderNav(){
+  const TABS=[{id:'shopping',i:'🛒',l:'Покупки'},{id:'wishlist',i:'🎁',l:'Вишлисты'},
+    {id:'calendar',i:'📅',l:'Календарь'},{id:'notes',i:'📝',l:'Заметки'},{id:'profile',i:'👤',l:'Профиль'}];
+  const sb=TABS.map(t=>`<button class="sb-item ${t.id===tab?'on':''}" data-tab="${t.id}"><span class="sb-icon">${t.i}</span>${t.l}</button>`).join('');
+  document.getElementById('sb-nav').innerHTML=sb;
+  const bn=TABS.map(t=>`<button class="bn-item ${t.id===tab?'on':''}" data-tab="${t.id}"><span class="bn-icon">${t.i}</span><span class="bn-label">${t.l}</span></button>`).join('');
+  document.getElementById('bottom-nav').innerHTML=bn;
+}
+function renderSbUser(){
+  const u=cu();
+  const p=partner();
+  const sbUser=document.getElementById('sb-user');
+  if(!sbUser||!u)return;
+  sbUser.innerHTML=`<div class="sb-user-row" data-a="toggle-user">
+    ${av(u,32)}<div style="flex:1;min-width:0"><div class="sb-user-name">${u.name}</div>
+    ${p?`<div class="sb-user-hint">↔ ${p.name}</div>`:'<div class="sb-user-hint">Профиль</div>'}</div></div>`;
+}
+
+// ── SETUP ──
+function renderSetup(){
+  const isFirst=U.length===0;
+  document.getElementById('setup').style.display='flex';
+  document.getElementById('main').style.display='none';
+  document.getElementById('setup').innerHTML=`
+    <div style="width:100%;max-width:400px">
+      <div style="font-size:48px;text-align:center;margin-bottom:14px">${isFirst?'💜':'👥'}</div>
+      <h1 style="font-size:24px;font-weight:700;text-align:center;margin-bottom:6px">${isFirst?'Семейный планировщик':'Добавить партнёра'}</h1>
+      <p style="font-size:14px;color:var(--t2);text-align:center;margin-bottom:28px;line-height:1.5">${isFirst?'Создайте профиль чтобы начать':'Добавьте второй профиль'}</p>
+      <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:var(--rxl);padding:24px;box-shadow:var(--sh2)">
+        <div class="fg"><label class="lbl">Имя</label><input class="inp" id="sn" placeholder="Введите имя" maxlength="30"></div>
+        <div class="fg"><label class="lbl">Цвет</label>
+          <div class="color-grid" id="scg">${COLORS.map((c,i)=>`<div class="color-swatch ${i===0?'on':''}" data-c="${c}" style="background:${c}">${i===0?'✓':''}</div>`).join('')}</div>
+        </div>
+        <button class="btn btn-pr btn-fw" id="ssubmit" style="font-size:15px;padding:12px">${isFirst?'✨ Начать':'➕ Добавить'}</button>
+        ${!isFirst?'<button class="btn btn-gh btn-fw" id="sskip" style="margin-top:8px">Пропустить</button>':''}
+      </div>
+    </div>`;
+  let selColor=COLORS[0];
+  document.querySelectorAll('#scg .color-swatch').forEach(sw=>{
+    sw.addEventListener('click',()=>{
+      document.querySelectorAll('#scg .color-swatch').forEach(s=>{s.classList.remove('on');s.textContent=''});
+      sw.classList.add('on');sw.textContent='✓';selColor=sw.dataset.c;
+    });
+  });
+  document.getElementById('ssubmit').addEventListener('click',()=>{
+    const name=document.getElementById('sn').value.trim();
+    if(!name){toast('Введите имя');return}
+    const user={id:gid(),name,color:selColor};
+    U.push(user);save('users');CU=user.id;save('cuid');
+    renderMain();
+  });
+  const sk=document.getElementById('sskip');
+  if(sk)sk.addEventListener('click',renderMain);
+}
+function renderMain(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('main').style.display='';
+  renderNav();renderSbUser();goTab(tab);
+  checkRecurring();
+}
+function checkRecurring(){
+  const td=today();
+  SH=SH.map(it=>{
+    if(it.recurrence==='none'||!it.checked)return it;
+    const diff=Math.floor((new Date(td)-new Date(it.lastRec||td))/86400000);
+    if((it.recurrence==='weekly'&&diff>=7)||(it.recurrence==='monthly'&&diff>=28))
+      return{...it,checked:false,lastRec:td};
+    return it;
+  });
+  save('shop');
+}
+
+// ── SHOPPING ──
+function rShopping(){
+  const unc=SH.filter(i=>!i.checked),ckd=SH.filter(i=>i.checked);
+  const rItem=it=>{
+    const u=U.find(x=>x.id===it.addedBy);
+    const recBadge=it.recurrence!=='none'?`<span class="badge" style="background:var(--acl);color:var(--ac);font-size:10px">🔁 ${it.recurrence==='weekly'?'Еженед.':'Ежемес.'}</span>`:'';
+    return`<div class="shop-item ${it.checked?'checked':''}" data-id="${it.id}">
+      <button class="checkbox ${it.checked?'on':''}" data-a="toggle-sh" data-id="${it.id}">${it.checked?'✓':''}</button>
+      <div style="flex:1;min-width:0">
+        <div class="shop-name">${it.name}</div>
+        ${recBadge||u?`<div style="display:flex;align-items:center;gap:5px;margin-top:3px">${recBadge}${u?av(u,16):''}</div>`:''}
+      </div>
+      <div class="item-acts">
+        <button class="btn-ic" data-a="edit-sh" data-id="${it.id}">✏️</button>
+        <button class="btn-ic rd" data-a="del-sh" data-id="${it.id}">🗑️</button>
+      </div>
+    </div>`;
+  };
+  return`
+    <div class="page-hdr"><span class="page-title">Покупки</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-sh">+</button></div>
+    </div>
+    <div style="padding:0 24px 80px;max-width:720px">
+    ${SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`:''}
+    ${unc.length?`<div class="shop-list">${unc.map(rItem).join('')}</div>`:''}
+    ${ckd.length?`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px">
+        <span style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Куплено (${ckd.length})</span>
+        <button class="btn btn-sm" style="color:var(--rd);background:var(--rdl)" data-a="clear-ckd">Очистить</button>
+      </div>
+      <div class="shop-list">${ckd.map(rItem).join('')}</div>`:''}
+    </div>`;
+}
+function openShModal(id=null){
+  const it=id?SH.find(i=>i.id===id):null;
+  openModal(`<div class="modal-title">${it?'Изменить товар':'Добавить товар'}</div>
+    <div class="fg"><label class="lbl">Название</label>
+      <input class="inp" id="sh-n" placeholder="Молоко, хлеб…" value="${it?it.name:''}" maxlength="80"></div>
+    <div class="fg"><label class="lbl">Повторение</label>
+      <div class="chip-row">${Object.entries(REC).map(([k,v])=>`<button class="chip ${(!it&&k==='none')||(it&&it.recurrence===k)?'on':''}" data-rec="${k}">${v}</button>`).join('')}</div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-pr" data-a="save-sh" data-id="${id||''}">${it?'Сохранить':'Добавить'}</button>
+    </div>`);
+}
+function saveSh(id){
+  const name=document.getElementById('sh-n')?.value.trim();
+  if(!name){toast('Введите название');return}
+  const rec=document.querySelector('.chip[data-rec].on')?.dataset.rec||'none';
+  const u=cu();
+  if(id){SH=SH.map(i=>i.id===id?{...i,name,recurrence:rec}:i)}
+  else{SH.push({id:gid(),name,checked:false,addedBy:u.id,addedByName:u.name,recurrence:rec,lastRec:today(),at:new Date().toISOString()})}
+  save('shop');closeModal();renderTab('shopping');
+}
+
+// ── WISHLIST ──
+function rWishlist(){
+  const stabs=WTABS.map(t=>`<button class="stab ${wstab===t.id?'on':''}" data-ws="${t.id}">${t.ic} ${t.l}</button>`).join('');
+  const wt=WTABS.find(t=>t.id===wstab);
+  const items=WD[wstab]||[];
+  const isCard=wstab==='home'||wstab==='max';
+  let body='';
+  if(items.length===0){
+    const labels={dima:'личный список Димы',katya:'личный список Кати',home:'вещи для дома',max:'вещи для Макса'};
+    body=`<div class="empty"><div class="empty-ic">${wt.ic}</div><div class="empty-t">Список пуст</div><div class="empty-s">Добавьте ${labels[wstab]}</div></div>`;
+  } else if(isCard){
+    const cards=items.map(it=>{
+      const thumb=it.imageUrl?`<img src="${it.imageUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:`<div style="font-size:28px">${wt.ic}</div>`;
+      return`<div class="wish-card">
+        <div class="wish-card-thumb">${thumb}</div>
+        <div class="wish-card-body">
+          <div class="wish-card-title">${it.title}</div>
+          ${it.url?`<div style="font-size:11px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${it.url.replace(/^https?:\/\//,'')}</div>`:''}
+          <div class="wish-card-foot">${priBadge(it.priority)}<button class="btn-ic rd" data-a="del-wl" data-id="${it.id}">🗑️</button></div>
+        </div></div>`;
+    }).join('');
+    body=`<div class="wish-grid">${cards}</div>`;
+  } else {
+    const rows=items.map(it=>`<div class="wish-item">
+      <div class="pri-dot" style="background:${PRI_C[it.priority]||'#666'}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="wish-title">${it.title}</div>
+        ${it.url?`<div class="wish-url">${it.url.replace(/^https?:\/\//,'')}</div>`:''}
+      </div>
+      ${priBadge(it.priority)}
+      <button class="btn-ic rd" data-a="del-wl" data-id="${it.id}">🗑️</button>
+    </div>`).join('');
+    body=`<div style="padding:14px 20px 80px">${rows}</div>`;
+  }
+  return`
+    <div class="page-hdr"><span class="page-title">Вишлисты</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-wl">+</button></div>
+    </div>
+    <div class="subtabs">${stabs}</div>${body}`;
+}
+function openWlModal(){
+  const isCard=wstab==='home'||wstab==='max';
+  const wt=WTABS.find(t=>t.id===wstab);
+  openModal(`<div class="modal-title">${wt.ic} ${wt.l}</div>
+    ${isCard?`<div class="url-row"><input class="inp" id="wl-url" placeholder="Ссылка (необязательно)" type="url"><button class="btn btn-sc" id="wl-fetch" style="flex-shrink:0">🔍</button></div>`:''}
+    <div class="fg"><label class="lbl">Название *</label><input class="inp" id="wl-title" placeholder="Что хотите?" maxlength="120"></div>
+    ${!isCard?`<div class="fg"><label class="lbl">Ссылка</label><input class="inp" id="wl-urlb" placeholder="https://…" type="url"></div>`:''}
+    ${isCard?`<div class="fg"><label class="lbl">Фото (URL)</label><input class="inp" id="wl-img" placeholder="https://…" type="url"></div>`:''}
+    <div class="fg"><label class="lbl">Приоритет</label>
+      <div class="chip-row"><button class="chip" data-pri="want">🔥 Очень хочу</button><button class="chip on" data-pri="some">⭐ Когда-нибудь</button></div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-pr" data-a="save-wl">Добавить</button>
+    </div>`,
+  ov=>{
+    const fb=ov.querySelector('#wl-fetch');
+    if(fb)fb.addEventListener('click',async()=>{
+      const url=ov.querySelector('#wl-url')?.value.trim();
+      if(!url)return;fb.textContent='⏳';fb.disabled=true;
+      try{
+        const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(7000)});
+        const d=await r.json();const h=d.contents||'';
+        const tit=(h.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)||h.match(/<title[^>]*>([^<]+)<\/title>/i))?.[1]?.trim();
+        const img=(h.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i))?.[1]?.trim();
+        if(tit){const ti=ov.querySelector('#wl-title');if(ti)ti.value=tit}
+        if(img){const ii=ov.querySelector('#wl-img');if(ii)ii.value=img}
+        toast(tit?'✅ Найдено':'⚠️ Заголовок не найден');
+      }catch{toast('⚠️ Не удалось загрузить')}
+      fb.textContent='🔍';fb.disabled=false;
+    });
+  });
+}
+function saveWl(){
+  const title=document.getElementById('wl-title')?.value.trim();
+  if(!title){toast('Введите название');return}
+  const pri=document.querySelector('.chip[data-pri].on')?.dataset.pri||'some';
+  const u=cu();
+  const url=(document.getElementById('wl-url')||document.getElementById('wl-urlb'))?.value.trim()||null;
+  const img=document.getElementById('wl-img')?.value.trim()||null;
+  WD[wstab].push({id:gid(),title,url,imageUrl:img,priority:pri,addedBy:u.id,addedByName:u.name,at:new Date().toISOString()});
+  save('w'+wstab);closeModal();renderTab('wishlist');toast('✅ Добавлено');
+}
+function delWl(id){
+  if(!confirm('Удалить?'))return;
+  WD[wstab]=WD[wstab].filter(i=>i.id!==id);
+  save('w'+wstab);renderTab('wishlist');
+}
+
+// ── CALENDAR ──
+function rCalendar(){
+  const td=today(),sel=calSel||td;
+  const first=new Date(calY,calM,1),dim=new Date(calY,calM+1,0).getDate();
+  const startDow=(first.getDay()+6)%7;
+  const pDim=new Date(calY,calM,0).getDate();
+  const evMap={};
+  EV.forEach(e=>{if(!evMap[e.date])evMap[e.date]=[];evMap[e.date].push(e)});
+  let cells='';
+  for(let d=startDow-1;d>=0;d--){
+    const ds=`${calY}-${String(calM).padStart(2,'0')}-${String(pDim-d).padStart(2,'0')}`;
+    cells+=`<div class="cal-day other-month" data-date="${ds}"><span>${pDim-d}</span></div>`;
+  }
+  for(let d=1;d<=dim;d++){
+    const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evs=evMap[ds]||[];
+    const dots=evs.slice(0,3).map(e=>`<span class="ev-dot" style="background:${e.createdByColor}"></span>`).join('');
+    cells+=`<div class="cal-day ${ds===td?'today':''} ${ds===sel?'selected':''}" data-date="${ds}">
+      <span>${d}</span>${dots?`<div class="ev-dots">${dots}</div>`:''}
+    </div>`;
+  }
+  const total=Math.ceil((startDow+dim)/7)*7;
+  for(let d=1;d<=total-startDow-dim;d++){
+    const nm=calM+2>12?1:calM+2,ny=calM+2>12?calY+1:calY;
+    const ds=`${ny}-${String(nm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells+=`<div class="cal-day other-month" data-date="${ds}"><span>${d}</span></div>`;
+  }
+  const dayEvs=evMap[sel]||[];
+  const evHtml=dayEvs.length?dayEvs.map(e=>`
+    <div class="ev-card">
+      <div class="ev-bar" style="background:${e.createdByColor}"></div>
+      <div class="ev-body">
+        <div class="ev-title">${e.title}</div>
+        <div class="ev-meta">${e.time?`⏰ ${e.time} · `:''}<span>👤 ${e.createdByName}</span>${e.note?` · <span>${e.note}</span>`:''}</div>
+      </div>
+      <button class="btn-ic rd" data-a="del-ev" data-id="${e.id}" style="margin:10px 10px 0 0">🗑️</button>
+    </div>`).join('')
+    :`<div style="text-align:center;padding:20px;color:var(--t3);font-size:13px">Нет событий</div>`;
+  const calHtml=`
+    <div class="cal-card">
+      <div class="cal-nav-row">
+        <button class="btn btn-sc btn-sm" data-a="cal-prev">◀</button>
+        <span class="cal-month">${MO[calM]} ${calY}</span>
+        <button class="btn btn-sc btn-sm" data-a="cal-next">▶</button>
+      </div>
+      <div class="cal-dow-row">${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+    </div>`;
+  const evPanel=`<div class="ev-panel">
+    <div style="font-size:15px;font-weight:700;margin-bottom:10px;text-transform:capitalize">${fmtDate(sel)}</div>
+    ${evHtml}
+  </div>`;
+  return`
+    <div class="page-hdr"><span class="page-title">Календарь</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-ev">+</button></div>
+    </div>
+    <div class="cal-wrap">
+      <div class="cal-desktop">${calHtml}${evPanel}</div>
+    </div>`;
+}
+function openEvModal(){
+  openModal(`<div class="modal-title">Новое событие</div>
+    <div class="fg"><label class="lbl">Название *</label><input class="inp" id="ev-t" placeholder="Что планируете?" maxlength="100"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="lbl">Дата *</label><input class="inp" id="ev-d" type="date" value="${calSel||today()}"></div>
+      <div class="fg"><label class="lbl">Время</label><input class="inp" id="ev-tm" type="time"></div>
+    </div>
+    <div class="fg"><label class="lbl">Заметка</label><textarea class="inp" id="ev-n" placeholder="Дополнительно…" rows="2"></textarea></div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-pr" data-a="save-ev">Добавить</button>
+    </div>`);
+}
+function saveEv(){
+  const title=document.getElementById('ev-t')?.value.trim();
+  const date=document.getElementById('ev-d')?.value;
+  if(!title||!date){toast('Заполните название и дату');return}
+  const u=cu();
+  EV.push({id:gid(),title,date,time:document.getElementById('ev-tm')?.value||null,
+    note:document.getElementById('ev-n')?.value.trim()||null,
+    createdBy:u.id,createdByName:u.name,createdByColor:u.color,at:new Date().toISOString()});
+  save('events');calSel=date;closeModal();renderTab('calendar');toast('✅ Добавлено');
+}
+
+// ── NOTES ──
+function rNotes(){
+  const filtered=nfilt==='all'?NO:NO.filter(n=>n.category===nfilt);
+  const sorted=[...filtered].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+  const filterChips=`<div class="notes-filters">
+    <button class="chip ${nfilt==='all'?'on':''}" data-nf="all">Все</button>
+    ${Object.entries(NCATS).map(([k,v])=>`<button class="chip ${nfilt===k?'on':''}" data-nf="${k}"
+      style="${nfilt===k?`background:${v.c};border-color:${v.c}`:''}">${v.i} ${v.l}</button>`).join('')}
+  </div>`;
+  const cards=sorted.length?sorted.map(n=>{
+    const cat=NCATS[n.category]||NCATS.other;
+    return`<div class="note-card" data-a="edit-note" data-id="${n.id}">
+      <div class="note-card-top">
+        <span class="note-cat-tag" style="background:${cat.c}20;color:${cat.c}">${cat.i} ${cat.l}</span>
+        <span style="font-size:11px;color:var(--t3)">${timeAgo(n.updatedAt)}</span>
+      </div>
+      <div class="note-title">${n.title}</div>
+      ${n.content?`<div class="note-preview">${n.content}</div>`:''}
+      <div class="note-meta">✏️ ${n.lastEditedByName}</div>
+    </div>`;
+  }).join('')
+  :`<div class="empty" style="grid-column:1/-1"><div class="empty-ic">📝</div><div class="empty-t">Нет заметок</div><div class="empty-s">Нажмите + чтобы создать</div></div>`;
+  return`
+    <div class="page-hdr"><span class="page-title">Заметки</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-note">+</button></div>
+    </div>
+    ${filterChips}
+    <div class="notes-grid">${cards}</div>`;
+}
+function openNoteModal(id=null){
+  const n=id?NO.find(x=>x.id===id):null;
+  openModal(`<div class="modal-title">${n?'Редактировать':'Новая заметка'}</div>
+    <div class="fg"><label class="lbl">Категория</label>
+      <div class="chip-row" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px">
+        ${Object.entries(NCATS).map(([k,v])=>`<button class="chip ${(!n&&k==='other')||(n&&n.category===k)?'on':''}" data-cat="${k}"
+          style="${(!n&&k==='other')||(n&&n.category===k)?`background:${v.c};border-color:${v.c}`:''}">${v.i} ${v.l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="fg"><label class="lbl">Заголовок *</label>
+      <input class="inp" id="no-t" placeholder="Название" value="${n?n.title:''}" maxlength="100"></div>
+    <div class="fg"><label class="lbl">Содержимое</label>
+      <textarea class="inp" id="no-c" placeholder="Напишите здесь…" rows="6">${n?n.content:''}</textarea></div>
+    <div class="modal-acts">
+      ${id?`<button class="btn btn-rd" data-a="del-note" data-id="${id}" style="flex:0;padding:9px 14px">🗑️</button>`:''}
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-pr" data-a="save-note" data-id="${id||''}">${n?'Сохранить':'Создать'}</button>
+    </div>`,
+  ov=>{
+    ov.querySelectorAll('.chip[data-cat]').forEach(c=>{
+      c.addEventListener('click',()=>{
+        ov.querySelectorAll('.chip[data-cat]').forEach(x=>{x.classList.remove('on');x.style.background='';x.style.borderColor=''});
+        const cat=NCATS[c.dataset.cat];
+        c.classList.add('on');if(cat){c.style.background=cat.c;c.style.borderColor=cat.c}
+      });
+    });
+  });
+}
+function saveNote(id){
+  const title=document.getElementById('no-t')?.value.trim();
+  if(!title){toast('Введите заголовок');return}
+  const content=document.getElementById('no-c')?.value.trim()||'';
+  const cat=document.querySelector('.chip[data-cat].on')?.dataset.cat||'other';
+  const u=cu(),now=new Date().toISOString();
+  if(id){NO=NO.map(n=>n.id===id?{...n,title,content,category:cat,lastEditedBy:u.id,lastEditedByName:u.name,updatedAt:now}:n)}
+  else{NO.push({id:gid(),title,content,category:cat,lastEditedBy:u.id,lastEditedByName:u.name,createdAt:now,updatedAt:now})}
+  save('notes');closeModal();renderTab('notes');toast('✅ Сохранено');
+}
+
+// ── PROFILE ──
+function rProfile(){
+  const u=cu();if(!u)return'';
+  const p=partner();
+  return`
+    <div class="prof-wrap">
+      <div class="prof-hero">${av(u,56)}
+        <div><div class="prof-name">${u.name}</div><div class="prof-role">Текущий профиль</div></div>
+      </div>
+      ${p?`<div class="prof-card">
+        <div class="prof-card-title">Партнёр</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 15px;border-top:1px solid var(--bd)">
+          ${av(p,40)}<div style="flex:1"><div style="font-size:14px;font-weight:600">${p.name}</div></div>
+          <button class="btn btn-sc btn-sm" data-a="switch-u" data-id="${p.id}">↔ Переключить</button>
+        </div></div>`
+      :`<div class="prof-card">
+        <div class="prof-card-title">Партнёр</div>
+        <div style="padding:12px 15px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:14px;color:var(--t2)">Не добавлен</span>
+          <button class="btn btn-pr btn-sm" data-a="add-partner">+ Добавить</button>
+        </div></div>`}
+      <div class="prof-card">
+        <div class="prof-card-title">Ваш цвет</div>
+        <div style="padding:12px 15px;border-top:1px solid var(--bd)">
+          <div class="color-grid">
+            ${COLORS.map(c=>`<div class="color-swatch ${u.color===c?'on':''}" data-a="chg-color" data-c="${c}" style="background:${c}">${u.color===c?'✓':''}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="prof-card">
+        <div class="prof-card-title">Статистика</div>
+        ${[['Покупок',SH.length],['Событий',EV.length],['Заметок',NO.length],
+          ['Вишлист (всего)',Object.values(WD).flat().length]
+        ].map(([l,v])=>`<div class="prof-row"><span class="prof-row-l">${l}</span><span class="prof-row-v">${v}</span></div>`).join('')}
+      </div>
+      <button class="btn btn-rd btn-fw" style="margin-top:4px" data-a="reset">⚠️ Сбросить все данные</button>
+    </div>`;
+}
+
+// ── EVENT DELEGATION ──
+document.addEventListener('click',function(e){
+  // Tab navigation
+  const tb=e.target.closest('[data-tab]');
+  if(tb){goTab(tb.dataset.tab);return}
+  // Wishlist subtabs
+  const ws=e.target.closest('[data-ws]');
+  if(ws){wstab=ws.dataset.ws;renderTab('wishlist');return}
+  // Notes filter
+  const nf=e.target.closest('[data-nf]');
+  if(nf){nfilt=nf.dataset.nf;renderTab('notes');return}
+  // Calendar day
+  const cd=e.target.closest('.cal-day[data-date]');
+  if(cd){calSel=cd.dataset.date;renderTab('calendar');return}
+  // Chip toggles (recurrence)
+  const rc=e.target.closest('.chip[data-rec]');
+  if(rc){rc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));rc.classList.add('on');return}
+  // Priority chips
+  const pc=e.target.closest('.chip[data-pri]');
+  if(pc){pc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));pc.classList.add('on');return}
+
+  const btn=e.target.closest('[data-a]');
+  if(!btn)return;
+  const a=btn.dataset.a,id=btn.dataset.id;
+  switch(a){
+    case 'close-mo': closeModal();break;
+    // Shopping
+    case 'add-sh': openShModal();break;
+    case 'edit-sh': openShModal(id);break;
+    case 'save-sh': saveSh(id||null);break;
+    case 'toggle-sh':
+      SH=SH.map(i=>i.id===id?{...i,checked:!i.checked}:i);
+      save('shop');renderTab('shopping');break;
+    case 'del-sh':
+      if(confirm('Удалить?')){SH=SH.filter(i=>i.id!==id);save('shop');renderTab('shopping')}break;
+    case 'clear-ckd':
+      if(confirm('Удалить купленные?')){SH=SH.filter(i=>!i.checked);save('shop');renderTab('shopping')}break;
+    // Wishlist
+    case 'add-wl': openWlModal();break;
+    case 'save-wl': saveWl();break;
+    case 'del-wl': delWl(id);break;
+    // Calendar
+    case 'cal-prev': if(calM===0){calM=11;calY--}else calM--;renderTab('calendar');break;
+    case 'cal-next': if(calM===11){calM=0;calY++}else calM++;renderTab('calendar');break;
+    case 'add-ev': openEvModal();break;
+    case 'save-ev': saveEv();break;
+    case 'del-ev':
+      if(confirm('Удалить событие?')){EV=EV.filter(e=>e.id!==id);save('events');renderTab('calendar')}break;
+    // Notes
+    case 'add-note': openNoteModal();break;
+    case 'edit-note': openNoteModal(id);break;
+    case 'save-note': saveNote(id||null);break;
+    case 'del-note':
+      if(confirm('Удалить заметку?')){NO=NO.filter(n=>n.id!==id);save('notes');closeModal();renderTab('notes')}break;
+    // Profile
+    case 'chg-color':
+      U=U.map(u=>u.id===CU?{...u,color:btn.dataset.c}:u);
+      save('users');renderTab('profile');renderSbUser();toast('Цвет изменён');break;
+    case 'add-partner': renderSetup();break;
+    case 'switch-u':
+      CU=id;save('cuid');toast('Переключились на '+U.find(u=>u.id===id)?.name);
+      renderNav();renderSbUser();renderTab(tab);break;
+    case 'toggle-user':
+      const p=partner();
+      if(p){CU=p.id;save('cuid');toast('Переключились на '+p.name);renderNav();renderSbUser();renderTab(tab)}
+      else goTab('profile');break;
+    case 'reset':
+      if(confirm('Удалить ВСЕ данные?')&&confirm('Точно уверены?')){localStorage.clear();location.reload()}break;
+  }
+});
+
+// ── INIT + MIGRATION ──
+function migrate(){
+  // Notes: rename old categories
+  const catMap={recipes:'food',travel:'places',passwords:'other'};
+  let changed=false;
+  NO=NO.map(n=>{if(catMap[n.category]){changed=true;return{...n,category:catMap[n.category]}}return n});
+  if(changed)save('notes');
+  // Wishlist: migrate old hwish → whome
+  const oldHW=DB.get('hwish',[]);
+  if(oldHW.length&&!WD.home.length){WD.home=oldHW;save('whome')}
+  // Wishlist: migrate old wpersonal → wdima/wkatya by user name
+  const oldWP=DB.get('wpersonal',{});
+  U.forEach(u=>{
+    const name=u.name.toLowerCase();
+    const items=oldWP[u.id]||[];
+    if(!items.length)return;
+    if(name.includes('дим')&&!WD.dima.length){WD.dima=items;save('wdima')}
+    else if(name.includes('кат')&&!WD.katya.length){WD.katya=items;save('wkatya')}
+  });
+}
+function init(){
+  migrate();
+  if(U.length===0){renderSetup()}
+  else{
+    if(!CU||!U.find(u=>u.id===CU)){CU=U[0].id;save('cuid')}
+    renderMain();
+  }
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
