@@ -2,446 +2,460 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#6C63FF">
-<title>Семейный Планировщик 💜</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0A0A0A">
+<title>Планировщик</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --pr: #6C63FF; --pr-d: #5349E0; --pr-l: rgba(108,99,255,.12);
-  --ac: #FF6584; --ok: #43B89C; --ok-l: rgba(67,184,156,.12);
-  --wa: #FF9F43; --wa-l: rgba(255,159,67,.12);
-  --er: #FF4757; --er-l: rgba(255,71,87,.12);
-  --bg: #F7F8FC; --sf: #fff; --sf2: #F0F1F7; --sf3: #E8E9F3;
-  --tx: #1A1A2E; --tx2: #6B7280; --tx3: #9CA3AF; --bd: #E5E7EB;
-  --r1: 8px; --r2: 12px; --r3: 16px; --r4: 24px; --rf: 999px;
-  --s0: 0 1px 3px rgba(0,0,0,.05); --s1: 0 2px 8px rgba(0,0,0,.07);
-  --s2: 0 4px 16px rgba(0,0,0,.10); --s3: 0 8px 32px rgba(0,0,0,.14);
-  --tab-h: 64px; --hdr-h: 60px; --mw: 600px; --f: "Inter",-apple-system,sans-serif; --t: .18s ease;
+  --bg:#0A0A0A; --s1:#111111; --s2:#181818; --s3:#222222; --s4:#2A2A2A;
+  --bd:#1E1E1E; --bd2:#2A2A2A; --bd3:#333333;
+  --t1:#EEEEEE; --t2:#888888; --t3:#444444;
+  --ac:#7C5CF6; --ach:#6B48F0; --acl:rgba(124,92,246,.12); --acl2:rgba(124,92,246,.06);
+  --gr:#34D399; --grl:rgba(52,211,153,.12);
+  --rd:#F87171; --rdl:rgba(248,113,113,.12);
+  --yw:#FBBF24; --ywl:rgba(251,191,36,.12);
+  --bl:#60A5FA; --bll:rgba(96,165,250,.12);
+  --pk:#F472B6;
+  --r:8px; --rm:12px; --rl:16px; --rxl:20px;
+  --sh1:0 1px 4px rgba(0,0,0,.4); --sh2:0 4px 16px rgba(0,0,0,.5); --sh3:0 8px 32px rgba(0,0,0,.6);
+  --sb:220px; --bnh:60px;
+  --f:'Inter',-apple-system,system-ui,sans-serif; --tr:.15s ease;
 }
-@media(prefers-color-scheme:dark){:root{
-  --bg:#0F0F1A; --sf:#1A1A2E; --sf2:#252540; --sf3:#2D2D50;
-  --tx:#F1F2FB; --tx2:#9CA3AF; --tx3:#6B7280; --bd:#2D2D4E;
-  --s0:0 1px 3px rgba(0,0,0,.25); --s1:0 2px 8px rgba(0,0,0,.3);
-  --s2:0 4px 16px rgba(0,0,0,.35); --s3:0 8px 32px rgba(0,0,0,.4);
-}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100dvh;
-  max-width:var(--mw);margin:0 auto;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-@media(min-width:600px){body{border-left:1px solid var(--bd);border-right:1px solid var(--bd)}}
+html{-webkit-tap-highlight-color:transparent}
+body{font-family:var(--f);background:var(--bg);color:var(--t1);min-height:100dvh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
-button{border:none;background:none;cursor:pointer;font-family:inherit}
-input,textarea{font-family:inherit}
+button{border:none;background:none;cursor:pointer;font-family:inherit;color:inherit}
+input,textarea{font-family:inherit;color:inherit}
 
-/* Layout */
-#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
-#main{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
-.tab-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.tab-panel{display:none;animation:fadeIn .18s ease}
-.tab-panel.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+/* ── APP SHELL ── */
+#app{min-height:100dvh}
+#setup{display:none;min-height:100dvh;align-items:center;justify-content:center;padding:32px 20px;background:var(--bg)}
+#main{display:none;height:100dvh;overflow:hidden}
 
-/* Setup */
-#setup{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100dvh;padding:32px 24px;background:var(--bg)}
-.setup-logo{font-size:60px;margin-bottom:12px}
-.setup-title{font-size:26px;font-weight:800;text-align:center;margin-bottom:8px}
-.setup-sub{font-size:15px;color:var(--tx2);text-align:center;margin-bottom:36px;line-height:1.5}
-.setup-card{background:var(--sf);border-radius:var(--r4);padding:28px;width:100%;max-width:400px;box-shadow:var(--s2)}
+/* DESKTOP */
+@media(min-width:768px){
+  #main{display:grid;grid-template-columns:var(--sb) 1fr;height:100dvh;overflow:hidden}
+  .sidebar{display:flex!important}
+  .bottom-nav{display:none!important}
+  .content-area{grid-column:2;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  .modal-overlay{align-items:center;justify-content:center}
+  .modal-sheet{border-radius:var(--rxl)!important;max-width:500px!important;animation:mo-ctr .2s cubic-bezier(.34,1.56,.64,1)!important}
+  @keyframes mo-ctr{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+}
+/* MOBILE */
+@media(max-width:767px){
+  #main{display:flex;flex-direction:column}
+  .sidebar{display:none!important}
+  .bottom-nav{display:flex!important}
+  .content-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+}
 
-/* Header */
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 20px;
-  height:var(--hdr-h);background:var(--sf);border-bottom:1px solid var(--bd);
-  flex-shrink:0;position:sticky;top:0;z-index:10}
-.hdr-title{font-size:20px;font-weight:700}
-.hdr-right{display:flex;align-items:center;gap:8px}
+/* ── SIDEBAR ── */
+.sidebar{flex-direction:column;background:var(--s1);border-right:1px solid var(--bd);padding:16px 0;overflow-y:auto}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:0 14px 16px;border-bottom:1px solid var(--bd);margin-bottom:6px}
+.sb-logo-ic{width:30px;height:30px;background:var(--ac);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.sb-logo-name{font-size:13px;font-weight:700;color:var(--t1)}
+.sb-logo-sub{font-size:11px;color:var(--t2)}
+.sb-nav{flex:1;padding:4px 8px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:background var(--tr);font-size:13px;font-weight:500;color:var(--t2);width:100%;text-align:left;border:none;background:none;font-family:inherit}
+.sb-item:hover{background:var(--s3);color:var(--t1)}
+.sb-item.on{background:var(--acl);color:var(--ac)}
+.sb-icon{font-size:16px;width:18px;text-align:center;flex-shrink:0}
+.sb-user{padding:12px 8px 4px;border-top:1px solid var(--bd);margin-top:auto}
+.sb-user-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:background var(--tr)}
+.sb-user-row:hover{background:var(--s3)}
+.sb-user-name{font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-user-hint{font-size:11px;color:var(--t2)}
 
-/* Tab bar */
-.tab-bar{display:flex;align-items:center;background:var(--sf);border-top:1px solid var(--bd);
-  height:var(--tab-h);flex-shrink:0;padding:0 4px;
-  padding-bottom:env(safe-area-inset-bottom,0);position:sticky;bottom:0;z-index:10}
-.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;padding:6px 2px;border-radius:var(--r2);cursor:pointer;
-  transition:all var(--t);color:var(--tx3);background:none;border:none;font-family:inherit}
-.tb.on{color:var(--pr)}
-.tb .ti{font-size:21px;line-height:1;transition:transform .15s}
-.tb.on .ti{transform:scale(1.1)}
-.tb .tl{font-size:10px;font-weight:500;letter-spacing:.2px}
+/* ── BOTTOM NAV ── */
+.bottom-nav{background:var(--s1);border-top:1px solid var(--bd);height:var(--bnh);padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;align-items:center;padding-left:4px;padding-right:4px}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px;border-radius:var(--r);cursor:pointer;transition:all var(--tr);color:var(--t3);background:none;border:none;font-family:inherit}
+.bn-item.on{color:var(--ac)}
+.bn-icon{font-size:19px;line-height:1;transition:transform .12s}
+.bn-item.on .bn-icon{transform:scale(1.1)}
+.bn-label{font-size:10px;font-weight:500}
 
-/* Form */
-.fg{margin-bottom:16px}
-.lbl{display:block;font-size:12px;font-weight:600;color:var(--tx2);
-  margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
-.inp{width:100%;padding:13px 16px;background:var(--sf2);border:1.5px solid var(--bd);
-  border-radius:var(--r2);font-size:15px;color:var(--tx);outline:none;
-  transition:border-color var(--t);-webkit-appearance:none}
-.inp:focus{border-color:var(--pr);background:var(--sf)}
-.inp::placeholder{color:var(--tx3)}
-textarea.inp{resize:vertical;min-height:90px;line-height:1.5}
+/* ── CONTENT ── */
+.panels{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.panel{display:none}
+.panel.active{display:block;animation:fadeUp .15s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-/* Buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  padding:12px 20px;border-radius:var(--r2);font-size:15px;font-weight:600;
-  cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap}
+.page-hdr{display:flex;align-items:center;justify-content:space-between;padding:24px 28px 16px}
+.page-title{font-size:21px;font-weight:700}
+.page-acts{display:flex;align-items:center;gap:8px}
+@media(max-width:767px){.page-hdr{padding:16px 16px 12px}.page-title{font-size:18px}}
+
+/* ── COMPONENTS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:all .12s;white-space:nowrap;line-height:1}
 .btn:active{transform:scale(.97)}
-.btn-pr{background:var(--pr);color:#fff}.btn-pr:hover{background:var(--pr-d)}
-.btn-sc{background:var(--sf2);color:var(--tx)}.btn-sc:hover{background:var(--sf3)}
-.btn-er{background:var(--er);color:#fff}
-.btn-ol{background:transparent;border:1.5px solid var(--pr);color:var(--pr)}
-.btn-gh{background:transparent;color:var(--pr)}
-.btn-sm{padding:8px 14px;font-size:13px;border-radius:var(--r1)}
-.btn-lg{padding:15px 24px;font-size:16px}
+.btn-pr{background:var(--ac);color:#fff}.btn-pr:hover{background:var(--ach)}
+.btn-sc{background:var(--s2);color:var(--t1)}.btn-sc:hover{background:var(--s3)}
+.btn-gh{background:transparent;color:var(--t2)}.btn-gh:hover{background:var(--s2);color:var(--t1)}
+.btn-rd{background:var(--rdl);color:var(--rd)}.btn-rd:hover{background:rgba(248,113,113,.2)}
+.btn-sm{padding:6px 12px;font-size:13px}
 .btn-fw{width:100%}
-.btn-add{background:var(--pr);color:#fff;width:40px;height:40px;border-radius:var(--rf);
-  font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.btn-ic{width:32px;height:32px;border-radius:var(--r1);display:flex;align-items:center;
-  justify-content:center;cursor:pointer;background:none;border:none;font-size:15px;
-  color:var(--tx3);transition:all .15s}
-.btn-ic:hover{background:var(--sf2);color:var(--tx)}
-.btn-ic.er:hover{background:var(--er-l);color:var(--er)}
+.btn-ic{width:30px;height:30px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .12s;color:var(--t3);background:none;border:none}
+.btn-ic:hover{background:var(--s3);color:var(--t1)}
+.btn-ic.rd:hover{background:var(--rdl);color:var(--rd)}
+.btn-add{width:34px;height:34px;border-radius:var(--r);background:var(--ac);color:#fff;font-size:20px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s;border:none;flex-shrink:0}
+.btn-add:hover{background:var(--ach)}
 
-/* Badges */
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;
-  border-radius:var(--rf);font-size:11px;font-weight:600}
-.bdg-pr{background:var(--pr-l);color:var(--pr)}
-.bdg-ok{background:var(--ok-l);color:var(--ok)}
-.bdg-wa{background:var(--wa-l);color:var(--wa)}
-.bdg-er{background:var(--er-l);color:var(--er)}
-.bdg-nu{background:var(--sf2);color:var(--tx2)}
+.fg{margin-bottom:14px}
+.lbl{display:block;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.inp{width:100%;padding:10px 13px;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);font-size:14px;color:var(--t1);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.inp:focus{border-color:var(--ac);background:var(--s1)}
+.inp::placeholder{color:var(--t3)}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.6}
 
-/* Avatar */
-.av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
-  font-weight:700;color:#fff;flex-shrink:0}
+.av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;line-height:1}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 12px;border-radius:99px;font-size:13px;font-weight:500;cursor:pointer;background:var(--s2);color:var(--t2);border:1px solid var(--bd2);font-family:inherit;transition:all .12s}
+.chip:hover{background:var(--s3);color:var(--t1)}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.color-grid{display:flex;flex-wrap:wrap;gap:10px}
+.color-sw{width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:transform .12s;border:3px solid transparent}
+.color-sw:hover{transform:scale(1.1)}
+.color-sw.on{border-color:rgba(255,255,255,.5);box-shadow:0 0 0 1px var(--bd2)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 32px;text-align:center;gap:6px}
+.empty-ic{font-size:44px;opacity:.25;margin-bottom:4px}
+.empty-t{font-size:15px;font-weight:600;color:var(--t2)}
+.empty-s{font-size:13px;color:var(--t3);line-height:1.5;max-width:220px}
+.slbl{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;padding:10px 28px 4px}
+@media(max-width:767px){.slbl{padding:10px 16px 4px}}
 
-/* Color picker */
-.cg{display:flex;flex-wrap:wrap;gap:10px}
-.cs{width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;
-  justify-content:center;font-size:16px;transition:transform .15s;border:3px solid transparent}
-.cs:hover{transform:scale(1.1)}
-.cs.on{border-color:#fff;box-shadow:var(--s2)}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end;animation:mo-in .15s ease;backdrop-filter:blur(4px)}
+@keyframes mo-in{from{opacity:0}to{opacity:1}}
+.modal-sheet{background:var(--s1);border-radius:var(--rxl) var(--rxl) 0 0;width:100%;padding:0 22px 44px;max-height:90dvh;overflow-y:auto;animation:mo-up .22s cubic-bezier(.32,.72,0,1);border:1px solid var(--bd2)}
+@keyframes mo-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mo-handle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:12px auto 18px}
+.mo-title{font-size:16px;font-weight:700;margin-bottom:18px}
+.mo-acts{display:flex;gap:8px;margin-top:18px}
+.mo-acts .btn{flex:1}
 
-/* Chips */
-.chip-row{display:flex;flex-wrap:wrap;gap:8px}
-.chip{padding:7px 14px;border-radius:var(--rf);font-size:13px;font-weight:500;
-  cursor:pointer;background:var(--sf2);color:var(--tx2);border:none;
-  font-family:inherit;transition:all .15s;-webkit-tap-highlight-color:transparent}
-.chip.on{background:var(--pr);color:#fff}
-.chip:active{transform:scale(.96)}
+/* ── SETUP ── */
+.setup-card{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--rxl);padding:28px;width:100%;max-width:420px;box-shadow:var(--sh2)}
+.setup-icon{font-size:48px;text-align:center;margin-bottom:14px}
+.setup-title{font-size:24px;font-weight:700;text-align:center;margin-bottom:6px}
+.setup-sub{font-size:14px;color:var(--t2);text-align:center;margin-bottom:28px;line-height:1.5}
 
-/* Modal */
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;
-  display:flex;align-items:flex-end;animation:moIn .18s ease;backdrop-filter:blur(2px)}
-@keyframes moIn{from{opacity:0}to{opacity:1}}
-.ms{background:var(--sf);border-radius:var(--r4) var(--r4) 0 0;width:100%;
-  max-width:var(--mw);margin:0 auto;padding:0 24px 48px;max-height:90dvh;
-  overflow-y:auto;animation:msUp .22s cubic-bezier(.32,.72,0,1)}
-@keyframes msUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.mh{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:14px auto 20px}
-.mt{font-size:18px;font-weight:700;margin-bottom:20px}
-.ma{display:flex;gap:10px;margin-top:20px}
-.ma .btn{flex:1}
+/* ── SHOPPING ── */
+.shop-wrap{padding:0 28px 80px;max-width:720px}
+@media(max-width:767px){.shop-wrap{padding:0 12px 100px;max-width:none}}
+.shop-list{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rm);overflow:hidden;margin-bottom:8px}
+.shop-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-bottom:1px solid var(--bd);transition:background var(--tr)}
+.shop-item:last-child{border-bottom:none}
+.shop-item:hover{background:var(--s2)}
+.shop-item.ck{opacity:.5}
+.chkbox{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;font-size:11px;color:transparent;background:transparent}
+.chkbox.on{background:var(--gr);border-color:var(--gr);color:#fff}
+.shop-name{flex:1;font-size:14px;font-weight:500;color:var(--t1);transition:all var(--tr)}
+.shop-item.ck .shop-name{text-decoration:line-through;color:var(--t3)}
+.shop-meta{display:flex;align-items:center;gap:5px;margin-top:2px}
+.item-acts{display:flex;align-items:center;gap:1px;opacity:0;transition:opacity var(--tr)}
+.shop-item:hover .item-acts{opacity:1}
+@media(hover:none){.item-acts{opacity:1}}
 
-/* Section header */
-.sh{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 6px}
-.st{font-size:12px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px}
+/* ── SUBTABS ── */
+.subtabs{display:flex;background:var(--s1);border-bottom:1px solid var(--bd);padding:0 22px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.subtabs::-webkit-scrollbar{display:none}
+@media(max-width:767px){.subtabs{padding:0 8px}}
+.stab{padding:11px 13px;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:inherit;transition:all var(--tr);white-space:nowrap}
+.stab:hover{color:var(--t1)}
+.stab.on{color:var(--t1);border-bottom-color:var(--ac)}
 
-/* Empty state */
-.es{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:60px 32px;text-align:center;gap:10px}
-.es-ic{font-size:52px;opacity:.4}
-.es-t{font-size:16px;font-weight:600;color:var(--tx2)}
-.es-s{font-size:13px;color:var(--tx3);line-height:1.5}
+/* ── WISHLIST ── */
+.wish-list{padding:14px 24px}
+@media(max-width:767px){.wish-list{padding:10px 12px}}
+.wish-item{display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:7px;transition:background var(--tr)}
+.wish-item:hover{background:var(--s2)}
+.pri-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.wish-t{flex:1;font-size:14px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wish-u{font-size:11px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.wish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:14px 24px}
+@media(max-width:767px){.wish-grid{padding:10px 12px;grid-template-columns:repeat(2,1fr)}}
+.wish-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rm);overflow:hidden;display:flex;flex-direction:column}
+.wish-thumb{width:100%;height:100px;background:var(--acl2);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
+.wish-thumb img{width:100%;height:100%;object-fit:cover}
+.wish-card-body{padding:9px 11px 11px;flex:1;display:flex;flex-direction:column;gap:5px}
+.wish-card-title{font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wish-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
 
-/* Shopping */
-.si{display:flex;align-items:center;gap:12px;padding:13px 20px;
-  background:var(--sf);border-bottom:1px solid var(--bd);transition:background var(--t)}
-.si:last-child{border-bottom:none}
-.si.ck{opacity:.55}
-.cb{width:24px;height:24px;border-radius:50%;border:2px solid var(--bd);background:transparent;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  cursor:pointer;transition:all .15s;font-size:12px;color:transparent}
-.cb.on{background:var(--ok);border-color:var(--ok);color:#fff}
-.sn{flex:1;font-size:15px;font-weight:500;color:var(--tx);transition:all var(--t)}
-.si.ck .sn{text-decoration:line-through;color:var(--tx3)}
-.ia{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity var(--t)}
-.si:hover .ia,.ia:focus-within{opacity:1}
-@media(hover:none){.ia{opacity:1}}
+/* ── CALENDAR ── */
+.cal-wrap{padding:0 24px 80px}
+@media(max-width:767px){.cal-wrap{padding:0 10px 100px}}
+@media(min-width:900px){.cal-cols{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}}
+.cal-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rm);overflow:hidden;margin-bottom:16px}
+.cal-nav-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px}
+.cal-month-lbl{font-size:15px;font-weight:700}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px 5px}
+.cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--t3);padding:3px 0;text-transform:uppercase}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:0 10px 10px}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--t1);transition:background .1s}
+.cal-day:hover{background:var(--s3)}
+.cal-day.om{color:var(--t3)}
+.cal-day.td{color:var(--ac);font-weight:700}
+.cal-day.sel{background:var(--ac)!important;color:#fff!important}
+.ev-dots{display:flex;gap:2px;justify-content:center}
+.ev-dot{width:4px;height:4px;border-radius:50%}
+.ev-panel{padding-top:4px}
+.ev-day-title{font-size:14px;font-weight:700;margin-bottom:10px;text-transform:capitalize}
+.ev-card{display:flex;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:7px;overflow:hidden;transition:background var(--tr)}
+.ev-card:hover{background:var(--s2)}
+.ev-bar{width:3px;flex-shrink:0}
+.ev-body{flex:1;padding:9px 12px}
+.ev-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.ev-meta{font-size:12px;color:var(--t2);display:flex;gap:8px;flex-wrap:wrap}
 
-/* Sub-tabs */
-.stabs{display:flex;border-bottom:1px solid var(--bd);background:var(--sf)}
-.stab{flex:1;padding:13px 6px;text-align:center;font-size:13px;font-weight:500;
-  color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;
-  transition:all var(--t);background:none;border-left:none;border-right:none;
-  border-top:none;font-family:inherit}
-.stab.on{color:var(--pr);border-bottom-color:var(--pr)}
+/* ── NOTES ── */
+.notes-bar{display:flex;gap:6px;padding:10px 24px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bd);flex-shrink:0}
+.notes-bar::-webkit-scrollbar{display:none}
+@media(max-width:767px){.notes-bar{padding:8px 12px}}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:18px 24px 80px}
+@media(max-width:767px){.notes-grid{grid-template-columns:1fr;padding:10px 12px 100px;gap:7px}}
+.note-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rm);padding:13px 15px;cursor:pointer;transition:all .12s;display:flex;flex-direction:column;gap:7px}
+.note-card:hover{background:var(--s2);border-color:var(--bd2);transform:translateY(-1px);box-shadow:var(--sh1)}
+.note-top{display:flex;align-items:center;justify-content:space-between}
+.note-cat{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.note-title{font-size:14px;font-weight:600;line-height:1.3}
+.note-preview{font-size:13px;color:var(--t2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.note-meta{font-size:11px;color:var(--t3)}
 
-/* Wishlist cards */
-.wg{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px}
-@media(min-width:480px){.wg{grid-template-columns:1fr 1fr 1fr}}
-.wc{background:var(--sf);border-radius:var(--r3);box-shadow:var(--s1);overflow:hidden;display:flex;flex-direction:column}
-.wc-ph{width:100%;height:95px;background:var(--pr-l);display:flex;align-items:center;justify-content:center;font-size:30px}
-.wc-img{width:100%;height:95px;object-fit:cover}
-.wc-b{padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;gap:5px}
-.wc-t{font-size:13px;font-weight:600;color:var(--tx);line-height:1.3;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.wc-url{font-size:11px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wc-f{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
-.wl{padding:12px 16px}
-.wli{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--sf);
-  border-radius:var(--r2);margin-bottom:8px;box-shadow:var(--s0)}
-.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* ── PROFILE ── */
+.prof-wrap{padding:0 24px 80px;max-width:580px}
+@media(max-width:767px){.prof-wrap{padding:0 14px 100px;max-width:none}}
+.prof-hero{display:flex;align-items:center;gap:14px;padding:18px 0 22px}
+.prof-name{font-size:20px;font-weight:700}
+.prof-role{font-size:13px;color:var(--t2);margin-top:2px}
+.prof-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rm);margin-bottom:10px;overflow:hidden}
+.prof-card-title{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;padding:13px 15px 8px}
+.prof-row{display:flex;align-items:center;justify-content:space-between;padding:9px 15px;border-top:1px solid var(--bd);font-size:14px}
+.prof-row-l{color:var(--t2)}
+.prof-row-v{font-weight:500}
 
-/* Calendar */
-.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--sf)}
-.cal-ml{font-size:17px;font-weight:700;text-transform:capitalize}
-.cal-dh{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px;background:var(--sf);border-bottom:1px solid var(--bd)}
-.cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--tx3);padding:7px 2px;text-transform:uppercase}
-.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:6px 10px;background:var(--sf)}
-.cd{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;border-radius:var(--r1);cursor:pointer;transition:background .12s;font-size:13px;color:var(--tx)}
-.cd:hover{background:var(--sf2)}
-.cd.om{color:var(--tx3)}
-.cd.td{font-weight:700;color:var(--pr)}
-.cd.sel{background:var(--pr);color:#fff!important}
-.dn{font-size:13px;line-height:1}
-.edots{display:flex;gap:2px;justify-content:center;flex-wrap:wrap}
-.edot{width:5px;height:5px;border-radius:50%}
-.ev-list{padding:14px 16px}
-.evc{display:flex;background:var(--sf);border-radius:var(--r2);margin-bottom:8px;
-  box-shadow:var(--s0);overflow:hidden;cursor:pointer;transition:transform .12s}
-.evc:active{transform:scale(.99)}
-.ev-bar{width:4px;flex-shrink:0}
-.ev-b{flex:1;padding:11px 13px}
-.ev-t{font-size:14px;font-weight:600;margin-bottom:3px}
-.ev-m{font-size:12px;color:var(--tx3);display:flex;gap:8px;flex-wrap:wrap}
-
-/* Notes */
-.nc{display:flex;gap:12px;padding:13px 15px;background:var(--sf);border-radius:var(--r3);
-  margin-bottom:10px;box-shadow:var(--s0);cursor:pointer;transition:transform .12s}
-.nc:active{transform:scale(.99)}
-.nc-ic{width:40px;height:40px;border-radius:var(--r2);display:flex;align-items:center;
-  justify-content:center;font-size:20px;flex-shrink:0}
-.nc-b{flex:1;min-width:0}
-.nc-t{font-size:15px;font-weight:600;margin-bottom:3px}
-.nc-p{font-size:13px;color:var(--tx2);display:-webkit-box;-webkit-line-clamp:2;
-  -webkit-box-orient:vertical;overflow:hidden;line-height:1.4;margin-bottom:5px}
-.nc-m{font-size:11px;color:var(--tx3)}
-.fscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-  padding:9px 16px;display:flex;gap:8px;background:var(--sf);border-bottom:1px solid var(--bd)}
-.fscroll::-webkit-scrollbar{display:none}
-
-/* Profile */
-.ph{background:linear-gradient(135deg,var(--pr),var(--pr-d));padding:44px 24px 56px;
-  display:flex;flex-direction:column;align-items:center;gap:8px}
-.ph-name{font-size:22px;font-weight:700;color:#fff}
-.pb{background:var(--bg);border-radius:var(--r4) var(--r4) 0 0;margin-top:-28px;
-  padding:28px 20px 100px}
-.pc{background:var(--sf);border-radius:var(--r3);padding:16px;margin-bottom:12px;box-shadow:var(--s0)}
-.pc-t{font-size:14px;font-weight:600;color:var(--tx2);margin-bottom:12px}
-.pr-row{display:flex;align-items:center;gap:12px}
-.ir{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}
-.ir:last-child{border-bottom:none}
-.il{font-size:14px;color:var(--tx2)}
-.iv{font-size:14px;font-weight:500}
-
-/* URL row */
-.urlrow{display:flex;gap:8px;margin-bottom:14px}
-.urlrow .inp{flex:1;margin:0}
-
-/* Toast */
-.toast{position:fixed;bottom:calc(var(--tab-h) + 10px);left:50%;transform:translateX(-50%);
-  background:var(--tx);color:var(--bg);padding:9px 18px;border-radius:var(--rf);
-  font-size:13px;font-weight:500;z-index:200;white-space:nowrap;pointer-events:none;
-  animation:tIn .18s ease, tOut .2s ease 2.1s forwards}
-@keyframes tIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-@keyframes tOut{to{opacity:0}}
-
-/* Priority colors */
-.pri-want{background:rgba(255,101,132,.15);color:#FF6584}
-.pri-some{background:rgba(156,163,175,.18);color:#9CA3AF}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(var(--bnh) + 14px);left:50%;transform:translateX(-50%);background:var(--s2);color:var(--t1);border:1px solid var(--bd2);padding:8px 16px;border-radius:99px;font-size:13px;font-weight:500;z-index:200;white-space:nowrap;pointer-events:none;box-shadow:var(--sh2);animation:t-in .15s ease,t-out .2s ease 2s forwards}
+@media(min-width:768px){.toast{bottom:20px}}
+@keyframes t-in{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes t-out{to{opacity:0}}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+.url-row{display:flex;gap:7px;margin-bottom:12px}
+.url-row .inp{flex:1;margin:0}
+/* ── ALIASES (JS ↔ CSS) ── */
+.modal-handle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:12px auto 18px}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px}
+.modal-acts{display:flex;gap:8px;margin-top:18px}
+.modal-acts .btn{flex:1}
+.checkbox{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;font-size:11px;color:transparent;background:transparent}
+.checkbox.on{background:var(--gr);border-color:var(--gr);color:#fff}
+.shop-item.checked{opacity:.5}
+.shop-item.checked .shop-name{text-decoration:line-through;color:var(--t3)}
+.color-swatch{width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:transform .12s;border:3px solid transparent}
+.color-swatch:hover{transform:scale(1.1)}
+.color-swatch.on{border-color:rgba(255,255,255,.5)}
+.cal-day.other-month{color:var(--t3)}
+.cal-day.today{color:var(--ac);font-weight:700}
+.cal-day.selected{background:var(--ac)!important;color:#fff!important}
+.notes-filters{display:flex;gap:6px;padding:10px 24px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--bd);flex-shrink:0}
+.notes-filters::-webkit-scrollbar{display:none}
+@media(max-width:767px){.notes-filters{padding:8px 12px}}
+.note-card-top{display:flex;align-items:center;justify-content:space-between}
+.note-cat-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.wish-card-thumb{width:100%;height:100px;background:var(--acl2);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
+.wish-card-thumb img{width:100%;height:100%;object-fit:cover}
+.wish-title{flex:1;font-size:14px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wish-url{font-size:11px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.cal-month{font-size:15px;font-weight:700}
+.cal-desktop{margin-bottom:16px}
+@media(min-width:900px){.cal-desktop{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}}
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="setup" style="display:none"></div>
-  <div id="main" style="display:none">
-    <div id="hdr"></div>
-    <div class="tab-content">
-      <div id="tp-shopping" class="tab-panel"></div>
-      <div id="tp-wishlist" class="tab-panel"></div>
-      <div id="tp-calendar" class="tab-panel"></div>
-      <div id="tp-notes" class="tab-panel"></div>
-      <div id="tp-profile" class="tab-panel"></div>
+  <div id="setup"></div>
+  <div id="main">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-ic">📅</div>
+        <div><div class="sb-logo-name">Планировщик</div><div class="sb-logo-sub">семейный</div></div>
+      </div>
+      <nav class="sb-nav" id="sb-nav"></nav>
+      <div class="sb-user" id="sb-user"></div>
+    </aside>
+    <div class="content-area">
+      <div class="panels" id="panels">
+        <div id="tp-shopping" class="panel"></div>
+        <div id="tp-wishlist" class="panel"></div>
+        <div id="tp-calendar" class="panel"></div>
+        <div id="tp-notes"    class="panel"></div>
+        <div id="tp-profile"  class="panel"></div>
+      </div>
     </div>
-    <nav class="tab-bar" id="tbar"></nav>
+    <nav class="bottom-nav" id="bottom-nav"></nav>
   </div>
 </div>
 <div id="mroot"></div>
-
 <script>
-// =========================================================
-// СЕМЕЙНЫЙ ПЛАНИРОВЩИК  — vanilla JS + localStorage
-// =========================================================
-
-// --- CONFIG ---
-const COLORS=['#6C63FF','#FF6584','#43B89C','#FF9F43','#5352ED','#2ED573','#FF4757','#1E90FF'];
-const PRI={want:'🔥 Очень хочу',some:'⭐ Когда-нибудь'};
-const PRI_C={want:'#FF6584',some:'#9CA3AF'};
-const REC={none:'Без повтора',weekly:'Еженедельно',monthly:'Ежемесячно'};
+// ── CONFIG ──
+const COLORS=['#7C5CF6','#F472B6','#34D399','#FBBF24','#60A5FA','#F87171','#FB923C','#A78BFA'];
 const NCATS={
-  recipes:{l:'Рецепты',i:'🍽️',c:'#FF9F43'},
-  travel:{l:'Путешествия',i:'✈️',c:'#1E90FF'},
-  passwords:{l:'Пароли',i:'🔒',c:'#FF4757'},
-  other:{l:'Другое',i:'📄',c:'#9CA3AF'}
+  food:  {l:'Что поесть',       i:'🍽️',c:'#F59E0B'},
+  watch: {l:'Что посмотреть',   i:'🎬',c:'#8B5CF6'},
+  places:{l:'Куда сходить',     i:'📍',c:'#60A5FA'},
+  talk:  {l:'О чём поговорить', i:'💬',c:'#34D399'},
+  other: {l:'Другое',           i:'📄',c:'#6B7280'},
 };
-const MO_RU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const DOW_RU=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const WTABS=[
+  {id:'dima', l:'Дима',     ic:'👤',store:'wdima'},
+  {id:'katya',l:'Катя',     ic:'👤',store:'wkatya'},
+  {id:'home', l:'Для дома', ic:'🏡',store:'whome'},
+  {id:'max',  l:'Для Макса',ic:'👶',store:'wmax'},
+];
+const REC={none:'Без повтора',weekly:'Еженедельно',monthly:'Ежемесячно'};
+const PRI={want:'🔥 Очень хочу',some:'⭐ Когда-нибудь'};
+const PRI_C={want:'#F87171',some:'#FBBF24'};
+const MO=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DOW=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
-// --- STORAGE ---
+// ── STORAGE ──
 const DB={
   get(k,d=null){try{const v=localStorage.getItem('fp_'+k);return v!==null?JSON.parse(v):d}catch{return d}},
   set(k,v){try{localStorage.setItem('fp_'+k,JSON.stringify(v))}catch{}}
 };
 
-// --- STATE ---
-let U  = DB.get('users',[]);          // [{id,name,color}]
-let CU = DB.get('cuid',null);         // current user id
-let SH = DB.get('shop',[]);           // shopping items
-let HW = DB.get('hwish',[]);          // home wishlist
-let WP = DB.get('wpersonal',{});      // personal wishlists {uid:[]}
-let WS = DB.get('wshared',[]);        // shared wishlist
-let EV = DB.get('events',[]);         // calendar events
-let NO = DB.get('notes',[]);          // notes
-
-// UI state
-let tab='shopping', wstab='personal', nfilt='all';
+// ── STATE ──
+let U=DB.get('users',[]);
+let CU=DB.get('cuid',null);
+let SH=DB.get('shop',[]);
+let EV=DB.get('events',[]);
+let NO=DB.get('notes',[]);
+let WD={
+  dima: DB.get('wdima',[]),
+  katya:DB.get('wkatya',[]),
+  home: DB.get('whome',[]),
+  max:  DB.get('wmax',[]),
+};
+let tab='shopping', wstab='dima', nfilt='all';
 let calY=new Date().getFullYear(), calM=new Date().getMonth(), calSel=null;
 let modalStack=[];
 
-// --- UTILS ---
+// ── UTILS ──
 let _ic=Date.now();
 const gid=()=>(++_ic).toString(36);
 const today=()=>new Date().toISOString().slice(0,10);
-const ini=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-
-function av(user,size=36){
-  const fs=Math.round(size*.38);
-  return `<span class="av" style="width:${size}px;height:${size}px;background:${user.color};font-size:${fs}px">${ini(user.name)}</span>`;
+const ini=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+function av(u,sz=34){
+  const fs=Math.round(sz*.38);
+  return `<span class="av" style="width:${sz}px;height:${sz}px;background:${u.color};font-size:${fs}px">${ini(u.name)}</span>`;
 }
-
 function priBadge(p){
-  const cls=p==='want'?'pri-want':'pri-some';
-  return `<span class="badge ${cls}">${PRI[p]||p}</span>`;
+  const c=p==='want'?'rgba(248,113,113,.2)':'rgba(251,191,36,.2)';
+  const tc=p==='want'?'#F87171':'#FBBF24';
+  return `<span class="badge" style="background:${c};color:${tc}">${PRI[p]||p}</span>`;
 }
-
 function fmtDate(ds){
   if(!ds)return'';
-  return new Date(ds+'T12:00:00').toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+  return new Date(ds+'T12:00').toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
 }
-
 function timeAgo(iso){
-  const d=Date.now()-new Date(iso).getTime();
-  const m=Math.floor(d/60000);
+  const m=Math.floor((Date.now()-new Date(iso))/60000);
   if(m<1)return'только что';
   if(m<60)return m+' мин. назад';
   const h=Math.floor(m/60);
   if(h<24)return h+' ч. назад';
   return Math.floor(h/24)+' дн. назад';
 }
-
 function toast(msg){
   const t=document.createElement('div');
   t.className='toast';t.textContent=msg;
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2500);
+  setTimeout(()=>t.remove(),2400);
 }
-
 function save(k){
   const m={users:()=>DB.set('users',U),cuid:()=>DB.set('cuid',CU),
-    shop:()=>DB.set('shop',SH),hwish:()=>DB.set('hwish',HW),
-    wpersonal:()=>DB.set('wpersonal',WP),wshared:()=>DB.set('wshared',WS),
-    events:()=>DB.set('events',EV),notes:()=>DB.set('notes',NO)};
+    shop:()=>DB.set('shop',SH),events:()=>DB.set('events',EV),notes:()=>DB.set('notes',NO),
+    wdima:()=>DB.set('wdima',WD.dima),wkatya:()=>DB.set('wkatya',WD.katya),
+    whome:()=>DB.set('whome',WD.home),wmax:()=>DB.set('wmax',WD.max)};
   m[k]&&m[k]();
 }
+const cu=()=>U.find(u=>u.id===CU)||null;
+const partner=()=>U.find(u=>u.id!==CU)||null;
 
-function cu(){return U.find(u=>u.id===CU)||null}
-function partner(){return U.find(u=>u.id!==CU)||null}
-
-// --- MODAL ---
+// ── MODAL ──
 function openModal(html,cb){
   const ov=document.createElement('div');
-  ov.className='mo';
-  ov.innerHTML=`<div class="ms"><div class="mh"></div>${html}</div>`;
+  ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal-sheet"><div class="modal-handle"></div>${html}</div>`;
   ov.addEventListener('click',e=>{if(e.target===ov)closeModal()});
   document.getElementById('mroot').appendChild(ov);
   modalStack.push(ov);
   if(cb)setTimeout(()=>cb(ov),30);
-  setTimeout(()=>{const inp=ov.querySelector('input,textarea');if(inp)inp.focus()},60);
+  setTimeout(()=>{const i=ov.querySelector('input,textarea');if(i)i.focus()},60);
 }
 function closeModal(){const o=modalStack.pop();if(o)o.remove()}
 
-// --- ROUTING ---
+// ── ROUTING ──
 function goTab(t){
   tab=t;
-  document.querySelectorAll('.tb').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tp-'+t));
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='tp-'+t));
+  renderSbUser();
   renderTab(t);
 }
-
 function renderTab(t){
-  const el=document.getElementById('tp-'+t);
-  if(!el)return;
   const fn={shopping:rShopping,wishlist:rWishlist,calendar:rCalendar,notes:rNotes,profile:rProfile};
-  if(fn[t])el.innerHTML=fn[t]();
+  const el=document.getElementById('tp-'+t);
+  if(el&&fn[t])el.innerHTML=fn[t]();
+}
+function renderNav(){
+  const TABS=[{id:'shopping',i:'🛒',l:'Покупки'},{id:'wishlist',i:'🎁',l:'Вишлисты'},
+    {id:'calendar',i:'📅',l:'Календарь'},{id:'notes',i:'📝',l:'Заметки'},{id:'profile',i:'👤',l:'Профиль'}];
+  const sb=TABS.map(t=>`<button class="sb-item ${t.id===tab?'on':''}" data-tab="${t.id}"><span class="sb-icon">${t.i}</span>${t.l}</button>`).join('');
+  document.getElementById('sb-nav').innerHTML=sb;
+  const bn=TABS.map(t=>`<button class="bn-item ${t.id===tab?'on':''}" data-tab="${t.id}"><span class="bn-icon">${t.i}</span><span class="bn-label">${t.l}</span></button>`).join('');
+  document.getElementById('bottom-nav').innerHTML=bn;
+}
+function renderSbUser(){
+  const u=cu();
+  const p=partner();
+  const sbUser=document.getElementById('sb-user');
+  if(!sbUser||!u)return;
+  sbUser.innerHTML=`<div class="sb-user-row" data-a="toggle-user">
+    ${av(u,32)}<div style="flex:1;min-width:0"><div class="sb-user-name">${u.name}</div>
+    ${p?`<div class="sb-user-hint">↔ ${p.name}</div>`:'<div class="sb-user-hint">Профиль</div>'}</div></div>`;
 }
 
-function rTabBar(){
-  const tabs=[
-    {id:'shopping',i:'🛒',l:'Покупки'},{id:'wishlist',i:'🎁',l:'Вишлист'},
-    {id:'calendar',i:'📅',l:'Календарь'},{id:'notes',i:'📝',l:'Заметки'},
-    {id:'profile',i:'👤',l:'Профиль'}
-  ];
-  document.getElementById('tbar').innerHTML=tabs.map(t=>
-    `<button class="tb ${t.id===tab?'on':''}" data-tab="${t.id}">
-      <span class="ti">${t.i}</span><span class="tl">${t.l}</span></button>`
-  ).join('');
-}
-
-// =========================================================
-// SETUP
-// =========================================================
+// ── SETUP ──
 function renderSetup(){
   const isFirst=U.length===0;
   document.getElementById('setup').style.display='flex';
   document.getElementById('main').style.display='none';
   document.getElementById('setup').innerHTML=`
-    <div class="setup-logo">${isFirst?'💜':'👥'}</div>
-    <h1 class="setup-title">${isFirst?'Семейный Планировщик':'Добавить партнёра'}</h1>
-    <p class="setup-sub">${isFirst?'Создайте профиль чтобы начать':'Добавьте профиль вашего партнёра'}</p>
-    <div class="setup-card">
-      <div class="fg">
-        <label class="lbl">Ваше имя</label>
-        <input class="inp" id="sn" placeholder="Имя и фамилия" maxlength="30">
-      </div>
-      <div class="fg">
-        <label class="lbl">Ваш цвет</label>
-        <div class="cg" id="scg">
-          ${COLORS.map((c,i)=>`<div class="cs ${i===0?'on':''}" data-c="${c}" style="background:${c}">${i===0?'✓':''}</div>`).join('')}
+    <div style="width:100%;max-width:400px">
+      <div style="font-size:48px;text-align:center;margin-bottom:14px">${isFirst?'💜':'👥'}</div>
+      <h1 style="font-size:24px;font-weight:700;text-align:center;margin-bottom:6px">${isFirst?'Семейный планировщик':'Добавить партнёра'}</h1>
+      <p style="font-size:14px;color:var(--t2);text-align:center;margin-bottom:28px;line-height:1.5">${isFirst?'Создайте профиль чтобы начать':'Добавьте второй профиль'}</p>
+      <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:var(--rxl);padding:24px;box-shadow:var(--sh2)">
+        <div class="fg"><label class="lbl">Имя</label><input class="inp" id="sn" placeholder="Введите имя" maxlength="30"></div>
+        <div class="fg"><label class="lbl">Цвет</label>
+          <div class="color-grid" id="scg">${COLORS.map((c,i)=>`<div class="color-swatch ${i===0?'on':''}" data-c="${c}" style="background:${c}">${i===0?'✓':''}</div>`).join('')}</div>
         </div>
+        <button class="btn btn-pr btn-fw" id="ssubmit" style="font-size:15px;padding:12px">${isFirst?'✨ Начать':'➕ Добавить'}</button>
+        ${!isFirst?'<button class="btn btn-gh btn-fw" id="sskip" style="margin-top:8px">Пропустить</button>':''}
       </div>
-      <button class="btn btn-pr btn-fw btn-lg" id="ssubmit" style="margin-top:4px">
-        ${isFirst?'✨ Начать':'➕ Добавить'}
-      </button>
-      ${!isFirst?'<button class="btn btn-gh btn-fw" id="sskip" style="margin-top:8px">Пропустить</button>':''}
     </div>`;
-
   let selColor=COLORS[0];
-  document.querySelectorAll('#scg .cs').forEach(sw=>{
+  document.querySelectorAll('#scg .color-swatch').forEach(sw=>{
     sw.addEventListener('click',()=>{
-      document.querySelectorAll('#scg .cs').forEach(s=>{s.classList.remove('on');s.textContent=''});
+      document.querySelectorAll('#scg .color-swatch').forEach(s=>{s.classList.remove('on');s.textContent=''});
       sw.classList.add('on');sw.textContent='✓';selColor=sw.dataset.c;
     });
   });
@@ -449,558 +463,466 @@ function renderSetup(){
     const name=document.getElementById('sn').value.trim();
     if(!name){toast('Введите имя');return}
     const user={id:gid(),name,color:selColor};
-    U.push(user);save('users');
-    CU=user.id;save('cuid');
+    U.push(user);save('users');CU=user.id;save('cuid');
     renderMain();
   });
   const sk=document.getElementById('sskip');
   if(sk)sk.addEventListener('click',renderMain);
 }
-
 function renderMain(){
   document.getElementById('setup').style.display='none';
-  document.getElementById('main').style.display='flex';
-  rTabBar();
-  goTab(tab);
+  document.getElementById('main').style.display='';
+  renderNav();renderSbUser();goTab(tab);
   checkRecurring();
 }
-
 function checkRecurring(){
   const td=today();
   SH=SH.map(it=>{
     if(it.recurrence==='none'||!it.checked)return it;
-    if(!it.lastRec)return{...it,lastRec:td};
-    const diff=Math.floor((new Date(td)-new Date(it.lastRec))/86400000);
-    if((it.recurrence==='weekly'&&diff>=7)||(it.recurrence==='monthly'&&diff>=28)){
+    const diff=Math.floor((new Date(td)-new Date(it.lastRec||td))/86400000);
+    if((it.recurrence==='weekly'&&diff>=7)||(it.recurrence==='monthly'&&diff>=28))
       return{...it,checked:false,lastRec:td};
-    }
     return it;
   });
   save('shop');
 }
 
-// =========================================================
-// SHOPPING
-// =========================================================
+// ── SHOPPING ──
 function rShopping(){
-  const unc=SH.filter(i=>!i.checked), ckd=SH.filter(i=>i.checked);
+  const unc=SH.filter(i=>!i.checked),ckd=SH.filter(i=>i.checked);
   const rItem=it=>{
     const u=U.find(x=>x.id===it.addedBy);
-    const rec=it.recurrence!=='none'?`<span class="badge bdg-pr" style="font-size:10px">🔁 ${it.recurrence==='weekly'?'Еженед.':'Ежемес.'}</span>`:'';
-    return `<div class="si ${it.checked?'ck':''}" data-id="${it.id}">
-      <button class="cb ${it.checked?'on':''}" data-a="toggle" data-id="${it.id}">${it.checked?'✓':''}</button>
+    const recBadge=it.recurrence!=='none'?`<span class="badge" style="background:var(--acl);color:var(--ac);font-size:10px">🔁 ${it.recurrence==='weekly'?'Еженед.':'Ежемес.'}</span>`:'';
+    return`<div class="shop-item ${it.checked?'checked':''}" data-id="${it.id}">
+      <button class="checkbox ${it.checked?'on':''}" data-a="toggle-sh" data-id="${it.id}">${it.checked?'✓':''}</button>
       <div style="flex:1;min-width:0">
-        <div class="sn">${it.name}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-          ${rec}${u?av(u,18):''}
-        </div>
+        <div class="shop-name">${it.name}</div>
+        ${recBadge||u?`<div style="display:flex;align-items:center;gap:5px;margin-top:3px">${recBadge}${u?av(u,16):''}</div>`:''}
       </div>
-      <div class="ia">
+      <div class="item-acts">
         <button class="btn-ic" data-a="edit-sh" data-id="${it.id}">✏️</button>
-        <button class="btn-ic er" data-a="del-sh" data-id="${it.id}">🗑️</button>
+        <button class="btn-ic rd" data-a="del-sh" data-id="${it.id}">🗑️</button>
       </div>
     </div>`;
   };
-  return `
-    <div class="hdr">
-      <span class="hdr-title">🛒 Покупки</span>
-      <div class="hdr-right"><button class="btn-add" data-a="add-sh">+</button></div>
+  return`
+    <div class="page-hdr"><span class="page-title">Покупки</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-sh">+</button></div>
     </div>
-    ${SH.length===0?`<div class="es"><div class="es-ic">🛒</div><div class="es-t">Список пуст</div><div class="es-s">Нажмите + чтобы добавить товар</div></div>`:''}
-    ${unc.length>0?`<div class="card" style="margin:14px 16px;border-radius:var(--r3);overflow:hidden;box-shadow:var(--s1)">${unc.map(rItem).join('')}</div>`:''}
-    ${ckd.length>0?`
-      <div class="sh">
-        <span class="st">Куплено (${ckd.length})</span>
-        <button class="btn btn-sm" style="color:var(--er);background:var(--er-l)" data-a="clear-ck">Очистить</button>
+    <div style="padding:0 24px 80px;max-width:720px">
+    ${SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`:''}
+    ${unc.length?`<div class="shop-list">${unc.map(rItem).join('')}</div>`:''}
+    ${ckd.length?`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px">
+        <span style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Куплено (${ckd.length})</span>
+        <button class="btn btn-sm" style="color:var(--rd);background:var(--rdl)" data-a="clear-ckd">Очистить</button>
       </div>
-      <div class="card" style="margin:0 16px;border-radius:var(--r3);overflow:hidden;box-shadow:var(--s1)">${ckd.map(rItem).join('')}</div>`:''}
-    <div style="height:24px"></div>`;
+      <div class="shop-list">${ckd.map(rItem).join('')}</div>`:''}
+    </div>`;
 }
-
 function openShModal(id=null){
   const it=id?SH.find(i=>i.id===id):null;
-  openModal(`
-    <div class="mt">${it?'Изменить товар':'Добавить товар'}</div>
+  openModal(`<div class="modal-title">${it?'Изменить товар':'Добавить товар'}</div>
     <div class="fg"><label class="lbl">Название</label>
       <input class="inp" id="sh-n" placeholder="Молоко, хлеб…" value="${it?it.name:''}" maxlength="80"></div>
     <div class="fg"><label class="lbl">Повторение</label>
-      <div class="chip-row">
-        ${Object.entries(REC).map(([k,v])=>`<button class="chip ${(!it&&k==='none')||(it&&it.recurrence===k)?'on':''}" data-rec="${k}">${v}</button>`).join('')}
-      </div></div>
-    <div class="ma">
+      <div class="chip-row">${Object.entries(REC).map(([k,v])=>`<button class="chip ${(!it&&k==='none')||(it&&it.recurrence===k)?'on':''}" data-rec="${k}">${v}</button>`).join('')}</div>
+    </div>
+    <div class="modal-acts">
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
       <button class="btn btn-pr" data-a="save-sh" data-id="${id||''}">${it?'Сохранить':'Добавить'}</button>
     </div>`);
 }
-
 function saveSh(id){
-  const name=document.getElementById('sh-n').value.trim();
+  const name=document.getElementById('sh-n')?.value.trim();
   if(!name){toast('Введите название');return}
   const rec=document.querySelector('.chip[data-rec].on')?.dataset.rec||'none';
-  const user=cu();
+  const u=cu();
   if(id){SH=SH.map(i=>i.id===id?{...i,name,recurrence:rec}:i)}
-  else{SH.push({id:gid(),name,checked:false,addedBy:user.id,addedByName:user.name,recurrence:rec,lastRec:today(),at:new Date().toISOString()})}
+  else{SH.push({id:gid(),name,checked:false,addedBy:u.id,addedByName:u.name,recurrence:rec,lastRec:today(),at:new Date().toISOString()})}
   save('shop');closeModal();renderTab('shopping');
 }
 
-// =========================================================
-// WISHLIST
-// =========================================================
+// ── WISHLIST ──
 function rWishlist(){
-  const user=cu();
-  const tabs=[{id:'personal',l:'💙 Мой список'},{id:'shared',l:'💜 Наш список'},{id:'home',l:'🏡 Для дома'}];
-  const stabs=`<div class="stabs">${tabs.map(t=>`<button class="stab ${wstab===t.id?'on':''}" data-ws="${t.id}">${t.l}</button>`).join('')}</div>`;
-  const hdr=`<div class="hdr"><span class="hdr-title">🎁 Вишлисты</span><div class="hdr-right"><button class="btn-add" data-a="add-wl">+</button></div></div>`;
-  const rWli=((it,type)=>{
-    const u=U.find(x=>x.id===it.addedBy);
-    return`<div class="wli">
-      <div class="pdot" style="background:${PRI_C[it.priority]||'#ccc'}"></div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${it.title}</div>
-        <div style="display:flex;align-items:center;gap:6px">${priBadge(it.priority)}${u?av(u,18):''}</div>
-      </div>
-      <button class="btn-ic er" data-a="del-wl" data-type="${type}" data-id="${it.id}">🗑️</button>
-    </div>`;
-  });
-  const rHomeCard=(it)=>{
-    const img=it.imageUrl?`<img class="wc-img" src="${it.imageUrl}" onerror="this.style.display='none'">`:`<div class="wc-ph">🏡</div>`;
-    return`<div class="wc">${img}
-      <div class="wc-b">
-        <div class="wc-t">${it.title}</div>
-        ${it.url?`<div class="wc-url">${it.url.replace(/^https?:\/\//,'')}</div>`:''}
-        <div class="wc-f">${priBadge(it.priority)}<button class="btn-ic er" data-a="del-wl" data-type="home" data-id="${it.id}" style="opacity:.7">🗑️</button></div>
-      </div></div>`;
-  };
+  const stabs=WTABS.map(t=>`<button class="stab ${wstab===t.id?'on':''}" data-ws="${t.id}">${t.ic} ${t.l}</button>`).join('');
+  const wt=WTABS.find(t=>t.id===wstab);
+  const items=WD[wstab]||[];
+  const isCard=wstab==='home'||wstab==='max';
   let body='';
-  if(wstab==='personal'){
-    const items=WP[user?.id]||[];
-    body=items.length?`<div class="wl">${items.map(i=>rWli(i,'personal')).join('')}</div>`
-      :`<div class="es"><div class="es-ic">💙</div><div class="es-t">Личный список пуст</div><div class="es-s">Добавьте желания для подарков</div></div>`;
-  }else if(wstab==='shared'){
-    body=WS.length?`<div class="wl">${WS.map(i=>rWli(i,'shared')).join('')}</div>`
-      :`<div class="es"><div class="es-ic">💜</div><div class="es-t">Общий список пуст</div><div class="es-s">Общие желания вашей пары</div></div>`;
-  }else{
-    body=HW.length?`<div class="wg">${HW.map(rHomeCard).join('')}</div>`
-      :`<div class="es"><div class="es-ic">🏡</div><div class="es-t">Список для дома пуст</div><div class="es-s">Добавьте что хотите купить для дома</div></div>`;
+  if(items.length===0){
+    const labels={dima:'личный список Димы',katya:'личный список Кати',home:'вещи для дома',max:'вещи для Макса'};
+    body=`<div class="empty"><div class="empty-ic">${wt.ic}</div><div class="empty-t">Список пуст</div><div class="empty-s">Добавьте ${labels[wstab]}</div></div>`;
+  } else if(isCard){
+    const cards=items.map(it=>{
+      const thumb=it.imageUrl?`<img src="${it.imageUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:`<div style="font-size:28px">${wt.ic}</div>`;
+      return`<div class="wish-card">
+        <div class="wish-card-thumb">${thumb}</div>
+        <div class="wish-card-body">
+          <div class="wish-card-title">${it.title}</div>
+          ${it.url?`<div style="font-size:11px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${it.url.replace(/^https?:\/\//,'')}</div>`:''}
+          <div class="wish-card-foot">${priBadge(it.priority)}<button class="btn-ic rd" data-a="del-wl" data-id="${it.id}">🗑️</button></div>
+        </div></div>`;
+    }).join('');
+    body=`<div class="wish-grid">${cards}</div>`;
+  } else {
+    const rows=items.map(it=>`<div class="wish-item">
+      <div class="pri-dot" style="background:${PRI_C[it.priority]||'#666'}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="wish-title">${it.title}</div>
+        ${it.url?`<div class="wish-url">${it.url.replace(/^https?:\/\//,'')}</div>`:''}
+      </div>
+      ${priBadge(it.priority)}
+      <button class="btn-ic rd" data-a="del-wl" data-id="${it.id}">🗑️</button>
+    </div>`).join('');
+    body=`<div style="padding:14px 20px 80px">${rows}</div>`;
   }
-  return hdr+stabs+body;
+  return`
+    <div class="page-hdr"><span class="page-title">Вишлисты</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-wl">+</button></div>
+    </div>
+    <div class="subtabs">${stabs}</div>${body}`;
 }
-
 function openWlModal(){
-  const isHome=wstab==='home';
-  const title=wstab==='personal'?'💙 В мой список':wstab==='shared'?'💜 В наш список':'🏡 Для дома';
-  openModal(`
-    <div class="mt">${title}</div>
-    ${isHome?`<div class="urlrow"><input class="inp" id="wl-url" placeholder="Вставьте ссылку (необязательно)" type="url"><button class="btn btn-sc" id="wl-fetch" style="flex-shrink:0">🔍</button></div>`:''}
-    <div class="fg"><label class="lbl">Название *</label><input class="inp" id="wl-title" placeholder="Чего хотите?" maxlength="100"></div>
-    ${isHome?`<div class="fg"><label class="lbl">Изображение (URL)</label><input class="inp" id="wl-img" placeholder="https://…" type="url"></div>`
-      :`<div class="fg"><label class="lbl">Ссылка</label><input class="inp" id="wl-urlb" placeholder="https://…" type="url"></div>`}
+  const isCard=wstab==='home'||wstab==='max';
+  const wt=WTABS.find(t=>t.id===wstab);
+  openModal(`<div class="modal-title">${wt.ic} ${wt.l}</div>
+    ${isCard?`<div class="url-row"><input class="inp" id="wl-url" placeholder="Ссылка (необязательно)" type="url"><button class="btn btn-sc" id="wl-fetch" style="flex-shrink:0">🔍</button></div>`:''}
+    <div class="fg"><label class="lbl">Название *</label><input class="inp" id="wl-title" placeholder="Что хотите?" maxlength="120"></div>
+    ${!isCard?`<div class="fg"><label class="lbl">Ссылка</label><input class="inp" id="wl-urlb" placeholder="https://…" type="url"></div>`:''}
+    ${isCard?`<div class="fg"><label class="lbl">Фото (URL)</label><input class="inp" id="wl-img" placeholder="https://…" type="url"></div>`:''}
     <div class="fg"><label class="lbl">Приоритет</label>
-      <div class="chip-row">
-        <button class="chip" data-pri="want">🔥 Очень хочу</button>
-        <button class="chip on" data-pri="some">⭐ Когда-нибудь</button>
-      </div></div>
-    <div class="ma">
+      <div class="chip-row"><button class="chip" data-pri="want">🔥 Очень хочу</button><button class="chip on" data-pri="some">⭐ Когда-нибудь</button></div>
+    </div>
+    <div class="modal-acts">
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
       <button class="btn btn-pr" data-a="save-wl">Добавить</button>
     </div>`,
   ov=>{
     const fb=ov.querySelector('#wl-fetch');
     if(fb)fb.addEventListener('click',async()=>{
-      const url=ov.querySelector('#wl-url').value.trim();
-      if(!url)return;
-      fb.textContent='⏳';fb.disabled=true;
+      const url=ov.querySelector('#wl-url')?.value.trim();
+      if(!url)return;fb.textContent='⏳';fb.disabled=true;
       try{
-        const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url),
-          {signal:AbortSignal.timeout(7000)});
-        const d=await r.json();
-        const h=d.contents||'';
-        const tit=(h.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
-          ||h.match(/<title[^>]*>([^<]+)<\/title>/i))?.[1]?.trim();
+        const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(7000)});
+        const d=await r.json();const h=d.contents||'';
+        const tit=(h.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)||h.match(/<title[^>]*>([^<]+)<\/title>/i))?.[1]?.trim();
         const img=(h.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i))?.[1]?.trim();
         if(tit){const ti=ov.querySelector('#wl-title');if(ti)ti.value=tit}
         if(img){const ii=ov.querySelector('#wl-img');if(ii)ii.value=img}
-        toast(tit?'✅ Заголовок найден':'⚠️ Заголовок не найден');
+        toast(tit?'✅ Найдено':'⚠️ Заголовок не найден');
       }catch{toast('⚠️ Не удалось загрузить')}
       fb.textContent='🔍';fb.disabled=false;
     });
   });
 }
-
 function saveWl(){
   const title=document.getElementById('wl-title')?.value.trim();
   if(!title){toast('Введите название');return}
   const pri=document.querySelector('.chip[data-pri].on')?.dataset.pri||'some';
-  const user=cu();
-  const url=(document.getElementById('wl-url')||document.getElementById('wl-urlb'))?.value.trim();
-  const img=document.getElementById('wl-img')?.value.trim();
-  const item={id:gid(),title,url:url||null,imageUrl:img||null,priority:pri,addedBy:user.id,addedByName:user.name,at:new Date().toISOString()};
-  if(wstab==='personal'){if(!WP[user.id])WP[user.id]=[];WP[user.id].push(item);save('wpersonal')}
-  else if(wstab==='shared'){WS.push(item);save('wshared')}
-  else{HW.push(item);save('hwish')}
-  closeModal();renderTab('wishlist');toast('✅ Добавлено');
+  const u=cu();
+  const url=(document.getElementById('wl-url')||document.getElementById('wl-urlb'))?.value.trim()||null;
+  const img=document.getElementById('wl-img')?.value.trim()||null;
+  WD[wstab].push({id:gid(),title,url,imageUrl:img,priority:pri,addedBy:u.id,addedByName:u.name,at:new Date().toISOString()});
+  save('w'+wstab);closeModal();renderTab('wishlist');toast('✅ Добавлено');
+}
+function delWl(id){
+  if(!confirm('Удалить?'))return;
+  WD[wstab]=WD[wstab].filter(i=>i.id!==id);
+  save('w'+wstab);renderTab('wishlist');
 }
 
-function delWl(type,id){
-  if(!confirm('Удалить элемент?'))return;
-  if(type==='personal'){const uid=CU;WP[uid]=(WP[uid]||[]).filter(i=>i.id!==id);save('wpersonal')}
-  else if(type==='shared'){WS=WS.filter(i=>i.id!==id);save('wshared')}
-  else{HW=HW.filter(i=>i.id!==id);save('hwish')}
-  renderTab('wishlist');
-}
-
-// =========================================================
-// CALENDAR
-// =========================================================
+// ── CALENDAR ──
 function rCalendar(){
-  const td=today(), sel=calSel||td;
-  const first=new Date(calY,calM,1), last=new Date(calY,calM+1,0);
-  const startDow=(first.getDay()+6)%7; // Mon=0
-  const dim=last.getDate(), pDim=new Date(calY,calM,0).getDate();
+  const td=today(),sel=calSel||td;
+  const first=new Date(calY,calM,1),dim=new Date(calY,calM+1,0).getDate();
+  const startDow=(first.getDay()+6)%7;
+  const pDim=new Date(calY,calM,0).getDate();
   const evMap={};
   EV.forEach(e=>{if(!evMap[e.date])evMap[e.date]=[];evMap[e.date].push(e)});
-
   let cells='';
-  // prev month filler
   for(let d=startDow-1;d>=0;d--){
-    const day=pDim-d;
-    const ds=`${calY}-${String(calM).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    cells+=`<div class="cd om" data-date="${ds}"><span class="dn">${day}</span></div>`;
+    const ds=`${calY}-${String(calM).padStart(2,'0')}-${String(pDim-d).padStart(2,'0')}`;
+    cells+=`<div class="cal-day other-month" data-date="${ds}"><span>${pDim-d}</span></div>`;
   }
-  // current month
   for(let d=1;d<=dim;d++){
     const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isT=ds===td, isSel=ds===sel;
     const evs=evMap[ds]||[];
-    const dots=evs.slice(0,3).map(e=>`<span class="edot" style="background:${e.createdByColor}"></span>`).join('');
-    cells+=`<div class="cd ${isT?'td':''} ${isSel?'sel':''}" data-date="${ds}">
-      <span class="dn">${d}</span>
-      ${dots?`<div class="edots">${dots}</div>`:''}
+    const dots=evs.slice(0,3).map(e=>`<span class="ev-dot" style="background:${e.createdByColor}"></span>`).join('');
+    cells+=`<div class="cal-day ${ds===td?'today':''} ${ds===sel?'selected':''}" data-date="${ds}">
+      <span>${d}</span>${dots?`<div class="ev-dots">${dots}</div>`:''}
     </div>`;
   }
-  // next month filler
   const total=Math.ceil((startDow+dim)/7)*7;
   for(let d=1;d<=total-startDow-dim;d++){
-    const nm=calM+2>12?1:calM+2, ny=calM+2>12?calY+1:calY;
+    const nm=calM+2>12?1:calM+2,ny=calM+2>12?calY+1:calY;
     const ds=`${ny}-${String(nm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells+=`<div class="cd om" data-date="${ds}"><span class="dn">${d}</span></div>`;
+    cells+=`<div class="cal-day other-month" data-date="${ds}"><span>${d}</span></div>`;
   }
-
   const dayEvs=evMap[sel]||[];
-  const dayLabel=fmtDate(sel);
-  const evHtml=dayEvs.length
-    ?dayEvs.map(e=>`
-      <div class="evc">
-        <div class="ev-bar" style="background:${e.createdByColor}"></div>
-        <div class="ev-b">
-          <div class="ev-t">${e.title}</div>
-          <div class="ev-m">
-            ${e.time?`⏰ ${e.time}`:''}
-            <span>👤 ${e.createdByName}</span>
-          </div>
-          ${e.note?`<div style="font-size:12px;color:var(--tx2);margin-top:3px">${e.note}</div>`:''}
-        </div>
-        <button class="btn-ic er" data-a="del-ev" data-id="${e.id}" style="margin:8px 8px 0 0">🗑️</button>
-      </div>`).join('')
-    :`<div style="text-align:center;padding:18px;color:var(--tx3);font-size:13px">Нет событий в этот день</div>`;
-
-  return `
-    <div class="hdr">
-      <span class="hdr-title">📅 Календарь</span>
-      <div class="hdr-right"><button class="btn-add" data-a="add-ev">+</button></div>
+  const evHtml=dayEvs.length?dayEvs.map(e=>`
+    <div class="ev-card">
+      <div class="ev-bar" style="background:${e.createdByColor}"></div>
+      <div class="ev-body">
+        <div class="ev-title">${e.title}</div>
+        <div class="ev-meta">${e.time?`⏰ ${e.time} · `:''}<span>👤 ${e.createdByName}</span>${e.note?` · <span>${e.note}</span>`:''}</div>
+      </div>
+      <button class="btn-ic rd" data-a="del-ev" data-id="${e.id}" style="margin:10px 10px 0 0">🗑️</button>
+    </div>`).join('')
+    :`<div style="text-align:center;padding:20px;color:var(--t3);font-size:13px">Нет событий</div>`;
+  const calHtml=`
+    <div class="cal-card">
+      <div class="cal-nav-row">
+        <button class="btn btn-sc btn-sm" data-a="cal-prev">◀</button>
+        <span class="cal-month">${MO[calM]} ${calY}</span>
+        <button class="btn btn-sc btn-sm" data-a="cal-next">▶</button>
+      </div>
+      <div class="cal-dow-row">${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+    </div>`;
+  const evPanel=`<div class="ev-panel">
+    <div style="font-size:15px;font-weight:700;margin-bottom:10px;text-transform:capitalize">${fmtDate(sel)}</div>
+    ${evHtml}
+  </div>`;
+  return`
+    <div class="page-hdr"><span class="page-title">Календарь</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-ev">+</button></div>
     </div>
-    <div class="cal-nav">
-      <button class="btn btn-sc btn-sm" data-a="cal-prev">◀</button>
-      <span class="cal-ml">${MO_RU[calM]} ${calY}</span>
-      <button class="btn btn-sc btn-sm" data-a="cal-next">▶</button>
-    </div>
-    <div class="cal-dh">${DOW_RU.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
-    <div class="cal-g">${cells}</div>
-    <div class="ev-list">
-      <div style="font-size:15px;font-weight:700;margin-bottom:10px;text-transform:capitalize">${dayLabel}</div>
-      ${evHtml}
+    <div class="cal-wrap">
+      <div class="cal-desktop">${calHtml}${evPanel}</div>
     </div>`;
 }
-
 function openEvModal(){
-  const sel=calSel||today();
-  openModal(`
-    <div class="mt">➕ Новое событие</div>
-    <div class="fg"><label class="lbl">Название *</label>
-      <input class="inp" id="ev-t" placeholder="Что планируете?" maxlength="100"></div>
+  openModal(`<div class="modal-title">Новое событие</div>
+    <div class="fg"><label class="lbl">Название *</label><input class="inp" id="ev-t" placeholder="Что планируете?" maxlength="100"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="fg"><label class="lbl">Дата *</label>
-        <input class="inp" id="ev-d" type="date" value="${sel}"></div>
-      <div class="fg"><label class="lbl">Время</label>
-        <input class="inp" id="ev-tm" type="time"></div>
+      <div class="fg"><label class="lbl">Дата *</label><input class="inp" id="ev-d" type="date" value="${calSel||today()}"></div>
+      <div class="fg"><label class="lbl">Время</label><input class="inp" id="ev-tm" type="time"></div>
     </div>
-    <div class="fg"><label class="lbl">Заметка</label>
-      <textarea class="inp" id="ev-n" placeholder="Дополнительно…" rows="2"></textarea></div>
-    <div class="ma">
+    <div class="fg"><label class="lbl">Заметка</label><textarea class="inp" id="ev-n" placeholder="Дополнительно…" rows="2"></textarea></div>
+    <div class="modal-acts">
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
       <button class="btn btn-pr" data-a="save-ev">Добавить</button>
     </div>`);
 }
-
 function saveEv(){
   const title=document.getElementById('ev-t')?.value.trim();
   const date=document.getElementById('ev-d')?.value;
   if(!title||!date){toast('Заполните название и дату');return}
-  const time=document.getElementById('ev-tm')?.value||null;
-  const note=document.getElementById('ev-n')?.value.trim()||null;
-  const user=cu();
-  EV.push({id:gid(),title,date,time,note,createdBy:user.id,createdByName:user.name,createdByColor:user.color,at:new Date().toISOString()});
-  save('events');calSel=date;closeModal();renderTab('calendar');toast('✅ Событие добавлено');
+  const u=cu();
+  EV.push({id:gid(),title,date,time:document.getElementById('ev-tm')?.value||null,
+    note:document.getElementById('ev-n')?.value.trim()||null,
+    createdBy:u.id,createdByName:u.name,createdByColor:u.color,at:new Date().toISOString()});
+  save('events');calSel=date;closeModal();renderTab('calendar');toast('✅ Добавлено');
 }
 
-// =========================================================
-// NOTES
-// =========================================================
+// ── NOTES ──
 function rNotes(){
-  const filt=nfilt;
-  const items=filt==='all'?NO:NO.filter(n=>n.category===filt);
-  const sorted=[...items].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
-
-  const filterBar=`<div class="fscroll">
-    <button class="chip ${filt==='all'?'on':''}" data-nf="all">Все</button>
-    ${Object.entries(NCATS).map(([k,v])=>`
-      <button class="chip ${filt===k?'on':''}" data-nf="${k}"
-        style="${filt===k?`background:${v.c};color:#fff`:''}">
-        ${v.i} ${v.l}
-      </button>`).join('')}
+  const filtered=nfilt==='all'?NO:NO.filter(n=>n.category===nfilt);
+  const sorted=[...filtered].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+  const filterChips=`<div class="notes-filters">
+    <button class="chip ${nfilt==='all'?'on':''}" data-nf="all">Все</button>
+    ${Object.entries(NCATS).map(([k,v])=>`<button class="chip ${nfilt===k?'on':''}" data-nf="${k}"
+      style="${nfilt===k?`background:${v.c};border-color:${v.c}`:''}">${v.i} ${v.l}</button>`).join('')}
   </div>`;
-
-  const cards=sorted.length
-    ?sorted.map(n=>{
-      const cat=NCATS[n.category]||NCATS.other;
-      return`<div class="nc" data-a="edit-note" data-id="${n.id}">
-        <div class="nc-ic" style="background:${cat.c}22">${cat.i}</div>
-        <div class="nc-b">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">
-            <div class="nc-t">${n.title}</div>
-            <span class="badge" style="background:${cat.c}22;color:${cat.c};flex-shrink:0">${cat.l}</span>
-          </div>
-          ${n.content?`<div class="nc-p">${n.content}</div>`:''}
-          <div class="nc-m">✏️ ${n.lastEditedByName} · ${timeAgo(n.updatedAt)}</div>
-        </div>
-      </div>`;
-    }).join('')
-    :`<div class="es"><div class="es-ic">📝</div><div class="es-t">Нет заметок</div><div class="es-s">Нажмите + чтобы создать заметку</div></div>`;
-
+  const cards=sorted.length?sorted.map(n=>{
+    const cat=NCATS[n.category]||NCATS.other;
+    return`<div class="note-card" data-a="edit-note" data-id="${n.id}">
+      <div class="note-card-top">
+        <span class="note-cat-tag" style="background:${cat.c}20;color:${cat.c}">${cat.i} ${cat.l}</span>
+        <span style="font-size:11px;color:var(--t3)">${timeAgo(n.updatedAt)}</span>
+      </div>
+      <div class="note-title">${n.title}</div>
+      ${n.content?`<div class="note-preview">${n.content}</div>`:''}
+      <div class="note-meta">✏️ ${n.lastEditedByName}</div>
+    </div>`;
+  }).join('')
+  :`<div class="empty" style="grid-column:1/-1"><div class="empty-ic">📝</div><div class="empty-t">Нет заметок</div><div class="empty-s">Нажмите + чтобы создать</div></div>`;
   return`
-    <div class="hdr">
-      <span class="hdr-title">📝 Заметки</span>
-      <div class="hdr-right"><button class="btn-add" data-a="add-note">+</button></div>
+    <div class="page-hdr"><span class="page-title">Заметки</span>
+      <div class="page-acts"><button class="btn-add" data-a="add-note">+</button></div>
     </div>
-    ${filterBar}
-    <div style="padding:12px 16px 80px">${cards}</div>`;
+    ${filterChips}
+    <div class="notes-grid">${cards}</div>`;
 }
-
 function openNoteModal(id=null){
   const n=id?NO.find(x=>x.id===id):null;
-  openModal(`
-    <div class="mt">${n?'Редактировать заметку':'Новая заметка'}</div>
+  openModal(`<div class="modal-title">${n?'Редактировать':'Новая заметка'}</div>
     <div class="fg"><label class="lbl">Категория</label>
-      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">
-        ${Object.entries(NCATS).map(([k,v])=>`
-          <button class="chip ${(!n&&k==='other')||(n&&n.category===k)?'on':''}" data-cat="${k}"
-            style="${((!n&&k==='other')||(n&&n.category===k))?`background:${v.c};color:#fff`:''}">
-            ${v.i} ${v.l}
-          </button>`).join('')}
-      </div></div>
+      <div class="chip-row" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px">
+        ${Object.entries(NCATS).map(([k,v])=>`<button class="chip ${(!n&&k==='other')||(n&&n.category===k)?'on':''}" data-cat="${k}"
+          style="${(!n&&k==='other')||(n&&n.category===k)?`background:${v.c};border-color:${v.c}`:''}">${v.i} ${v.l}</button>`).join('')}
+      </div>
+    </div>
     <div class="fg"><label class="lbl">Заголовок *</label>
-      <input class="inp" id="no-t" placeholder="Название заметки" value="${n?n.title:''}" maxlength="100"></div>
+      <input class="inp" id="no-t" placeholder="Название" value="${n?n.title:''}" maxlength="100"></div>
     <div class="fg"><label class="lbl">Содержимое</label>
       <textarea class="inp" id="no-c" placeholder="Напишите здесь…" rows="6">${n?n.content:''}</textarea></div>
-    <div class="ma">
-      ${id?`<button class="btn btn-er" data-a="del-note" data-id="${id}" style="flex:0;padding:12px 14px">🗑️</button>`:''}
+    <div class="modal-acts">
+      ${id?`<button class="btn btn-rd" data-a="del-note" data-id="${id}" style="flex:0;padding:9px 14px">🗑️</button>`:''}
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
       <button class="btn btn-pr" data-a="save-note" data-id="${id||''}">${n?'Сохранить':'Создать'}</button>
     </div>`,
   ov=>{
     ov.querySelectorAll('.chip[data-cat]').forEach(c=>{
       c.addEventListener('click',()=>{
-        ov.querySelectorAll('.chip[data-cat]').forEach(x=>{x.classList.remove('on');x.style.background='';x.style.color=''});
-        c.classList.add('on');
+        ov.querySelectorAll('.chip[data-cat]').forEach(x=>{x.classList.remove('on');x.style.background='';x.style.borderColor=''});
         const cat=NCATS[c.dataset.cat];
-        if(cat){c.style.background=cat.c;c.style.color='#fff'}
+        c.classList.add('on');if(cat){c.style.background=cat.c;c.style.borderColor=cat.c}
       });
     });
   });
 }
-
 function saveNote(id){
   const title=document.getElementById('no-t')?.value.trim();
   if(!title){toast('Введите заголовок');return}
   const content=document.getElementById('no-c')?.value.trim()||'';
   const cat=document.querySelector('.chip[data-cat].on')?.dataset.cat||'other';
-  const user=cu(), now=new Date().toISOString();
-  if(id){NO=NO.map(n=>n.id===id?{...n,title,content,category:cat,lastEditedBy:user.id,lastEditedByName:user.name,updatedAt:now}:n)}
-  else{NO.push({id:gid(),title,content,category:cat,lastEditedBy:user.id,lastEditedByName:user.name,createdAt:now,updatedAt:now})}
+  const u=cu(),now=new Date().toISOString();
+  if(id){NO=NO.map(n=>n.id===id?{...n,title,content,category:cat,lastEditedBy:u.id,lastEditedByName:u.name,updatedAt:now}:n)}
+  else{NO.push({id:gid(),title,content,category:cat,lastEditedBy:u.id,lastEditedByName:u.name,createdAt:now,updatedAt:now})}
   save('notes');closeModal();renderTab('notes');toast('✅ Сохранено');
 }
 
-// =========================================================
-// PROFILE
-// =========================================================
+// ── PROFILE ──
 function rProfile(){
-  const user=cu(); if(!user)return'';
+  const u=cu();if(!u)return'';
   const p=partner();
   return`
-    <div class="ph">
-      ${av(user,72)}
-      <div class="ph-name">${user.name}</div>
-    </div>
-    <div class="pb">
-      ${p?`<div class="pc">
-          <div class="pc-t">💑 Партнёр</div>
-          <div class="pr-row">
-            ${av(p,48)}
-            <div><div style="font-size:15px;font-weight:600">${p.name}</div>
-              <div style="font-size:13px;color:var(--tx2);margin-top:2px">На этом устройстве</div></div>
+    <div class="prof-wrap">
+      <div class="prof-hero">${av(u,56)}
+        <div><div class="prof-name">${u.name}</div><div class="prof-role">Текущий профиль</div></div>
+      </div>
+      ${p?`<div class="prof-card">
+        <div class="prof-card-title">Партнёр</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 15px;border-top:1px solid var(--bd)">
+          ${av(p,40)}<div style="flex:1"><div style="font-size:14px;font-weight:600">${p.name}</div></div>
+          <button class="btn btn-sc btn-sm" data-a="switch-u" data-id="${p.id}">↔ Переключить</button>
+        </div></div>`
+      :`<div class="prof-card">
+        <div class="prof-card-title">Партнёр</div>
+        <div style="padding:12px 15px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:14px;color:var(--t2)">Не добавлен</span>
+          <button class="btn btn-pr btn-sm" data-a="add-partner">+ Добавить</button>
+        </div></div>`}
+      <div class="prof-card">
+        <div class="prof-card-title">Ваш цвет</div>
+        <div style="padding:12px 15px;border-top:1px solid var(--bd)">
+          <div class="color-grid">
+            ${COLORS.map(c=>`<div class="color-swatch ${u.color===c?'on':''}" data-a="chg-color" data-c="${c}" style="background:${c}">${u.color===c?'✓':''}</div>`).join('')}
           </div>
-          <button class="btn btn-ol btn-sm btn-fw" data-a="switch-u" data-id="${p.id}" style="margin-top:12px">
-            🔄 Переключиться на ${p.name}
-          </button>
-        </div>`
-      :`<div class="pc">
-          <div class="pc-t">💑 Партнёр</div>
-          <p style="color:var(--tx2);font-size:14px;margin-bottom:12px">Добавьте профиль партнёра</p>
-          <button class="btn btn-pr btn-sm" data-a="add-partner">➕ Добавить партнёра</button>
-        </div>`}
-      <div class="pc">
-        <div class="pc-t">🎨 Ваш цвет</div>
-        <div class="cg">
-          ${COLORS.map(c=>`<div class="cs ${user.color===c?'on':''}" data-a="chg-color" data-c="${c}" style="background:${c}">${user.color===c?'✓':''}</div>`).join('')}
         </div>
       </div>
-      <div class="pc">
-        <div class="pc-t">📊 Статистика</div>
-        ${[
-          ['Покупок в списке', SH.length],
-          ['Событий в календаре', EV.length],
-          ['Заметок', NO.length],
-          ['Элементов в вишлистах', (WP[CU]||[]).length+WS.length+HW.length],
-        ].map(([l,v])=>`<div class="ir"><span class="il">${l}</span><span class="iv">${v}</span></div>`).join('')}
+      <div class="prof-card">
+        <div class="prof-card-title">Статистика</div>
+        ${[['Покупок',SH.length],['Событий',EV.length],['Заметок',NO.length],
+          ['Вишлист (всего)',Object.values(WD).flat().length]
+        ].map(([l,v])=>`<div class="prof-row"><span class="prof-row-l">${l}</span><span class="prof-row-v">${v}</span></div>`).join('')}
       </div>
-      <div class="pc">
-        <div class="pc-t">ℹ️ О приложении</div>
-        <div class="ir"><span class="il">Версия</span><span class="iv">1.0.0</span></div>
-        <div class="ir"><span class="il">Данные</span><span class="iv">Локально в браузере</span></div>
-      </div>
-      <button class="btn btn-er btn-fw" style="margin-top:4px" data-a="reset">⚠️ Сбросить все данные</button>
+      <button class="btn btn-rd btn-fw" style="margin-top:4px" data-a="reset">⚠️ Сбросить все данные</button>
     </div>`;
 }
 
-// =========================================================
-// GLOBAL EVENT DELEGATION
-// =========================================================
-document.addEventListener('click', function(e){
-  // Main tab buttons
+// ── EVENT DELEGATION ──
+document.addEventListener('click',function(e){
+  // Tab navigation
   const tb=e.target.closest('[data-tab]');
   if(tb){goTab(tb.dataset.tab);return}
-
-  // Sub-tabs (wishlist)
+  // Wishlist subtabs
   const ws=e.target.closest('[data-ws]');
   if(ws){wstab=ws.dataset.ws;renderTab('wishlist');return}
-
   // Notes filter
   const nf=e.target.closest('[data-nf]');
   if(nf){nfilt=nf.dataset.nf;renderTab('notes');return}
-
   // Calendar day
-  const cd=e.target.closest('.cd[data-date]');
+  const cd=e.target.closest('.cal-day[data-date]');
   if(cd){calSel=cd.dataset.date;renderTab('calendar');return}
-
-  // Chip toggles (recurrence, priority inside modals)
+  // Chip toggles (recurrence)
   const rc=e.target.closest('.chip[data-rec]');
   if(rc){rc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));rc.classList.add('on');return}
+  // Priority chips
   const pc=e.target.closest('.chip[data-pri]');
   if(pc){pc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));pc.classList.add('on');return}
 
-  // Action buttons
   const btn=e.target.closest('[data-a]');
   if(!btn)return;
-  const a=btn.dataset.a, id=btn.dataset.id;
-
+  const a=btn.dataset.a,id=btn.dataset.id;
   switch(a){
-    case 'close-mo': closeModal(); break;
-
+    case 'close-mo': closeModal();break;
     // Shopping
-    case 'add-sh': openShModal(); break;
-    case 'edit-sh': openShModal(id); break;
-    case 'save-sh': saveSh(id||null); break;
-    case 'toggle': {
+    case 'add-sh': openShModal();break;
+    case 'edit-sh': openShModal(id);break;
+    case 'save-sh': saveSh(id||null);break;
+    case 'toggle-sh':
       SH=SH.map(i=>i.id===id?{...i,checked:!i.checked}:i);
       save('shop');renderTab('shopping');break;
-    }
-    case 'del-sh': {
-      if(confirm('Удалить этот товар?')){SH=SH.filter(i=>i.id!==id);save('shop');renderTab('shopping')}break;
-    }
-    case 'clear-ck': {
-      if(confirm('Удалить все купленные товары?')){SH=SH.filter(i=>!i.checked);save('shop');renderTab('shopping')}break;
-    }
-
+    case 'del-sh':
+      if(confirm('Удалить?')){SH=SH.filter(i=>i.id!==id);save('shop');renderTab('shopping')}break;
+    case 'clear-ckd':
+      if(confirm('Удалить купленные?')){SH=SH.filter(i=>!i.checked);save('shop');renderTab('shopping')}break;
     // Wishlist
-    case 'add-wl': openWlModal(); break;
-    case 'save-wl': saveWl(); break;
-    case 'del-wl': delWl(btn.dataset.type,id); break;
-
+    case 'add-wl': openWlModal();break;
+    case 'save-wl': saveWl();break;
+    case 'del-wl': delWl(id);break;
     // Calendar
-    case 'cal-prev': {
-      if(calM===0){calM=11;calY--}else calM--;
-      renderTab('calendar');break;
-    }
-    case 'cal-next': {
-      if(calM===11){calM=0;calY++}else calM++;
-      renderTab('calendar');break;
-    }
-    case 'add-ev': openEvModal(); break;
-    case 'save-ev': saveEv(); break;
-    case 'del-ev': {
+    case 'cal-prev': if(calM===0){calM=11;calY--}else calM--;renderTab('calendar');break;
+    case 'cal-next': if(calM===11){calM=0;calY++}else calM++;renderTab('calendar');break;
+    case 'add-ev': openEvModal();break;
+    case 'save-ev': saveEv();break;
+    case 'del-ev':
       if(confirm('Удалить событие?')){EV=EV.filter(e=>e.id!==id);save('events');renderTab('calendar')}break;
-    }
-
     // Notes
-    case 'add-note': openNoteModal(); break;
-    case 'edit-note': openNoteModal(id); break;
-    case 'save-note': saveNote(id||null); break;
-    case 'del-note': {
+    case 'add-note': openNoteModal();break;
+    case 'edit-note': openNoteModal(id);break;
+    case 'save-note': saveNote(id||null);break;
+    case 'del-note':
       if(confirm('Удалить заметку?')){NO=NO.filter(n=>n.id!==id);save('notes');closeModal();renderTab('notes')}break;
-    }
-
     // Profile
-    case 'chg-color': {
+    case 'chg-color':
       U=U.map(u=>u.id===CU?{...u,color:btn.dataset.c}:u);
-      save('users');renderTab('profile');toast('Цвет изменён!');break;
-    }
-    case 'add-partner': renderSetup(); break;
-    case 'switch-u': {
-      CU=id;save('cuid');
-      toast('Переключились на '+U.find(u=>u.id===id)?.name);
-      renderTab('profile');break;
-    }
-    case 'reset': {
-      if(confirm('Удалить ВСЕ данные? Это нельзя отменить!')&&confirm('Вы уверены?')){
-        localStorage.clear();location.reload();
-      }break;
-    }
+      save('users');renderTab('profile');renderSbUser();toast('Цвет изменён');break;
+    case 'add-partner': renderSetup();break;
+    case 'switch-u':
+      CU=id;save('cuid');toast('Переключились на '+U.find(u=>u.id===id)?.name);
+      renderNav();renderSbUser();renderTab(tab);break;
+    case 'toggle-user':
+      const p=partner();
+      if(p){CU=p.id;save('cuid');toast('Переключились на '+p.name);renderNav();renderSbUser();renderTab(tab)}
+      else goTab('profile');break;
+    case 'reset':
+      if(confirm('Удалить ВСЕ данные?')&&confirm('Точно уверены?')){localStorage.clear();location.reload()}break;
   }
 });
 
-// =========================================================
-// INIT
-// =========================================================
+// ── INIT + MIGRATION ──
+function migrate(){
+  // Notes: rename old categories
+  const catMap={recipes:'food',travel:'places',passwords:'other'};
+  let changed=false;
+  NO=NO.map(n=>{if(catMap[n.category]){changed=true;return{...n,category:catMap[n.category]}}return n});
+  if(changed)save('notes');
+  // Wishlist: migrate old hwish → whome
+  const oldHW=DB.get('hwish',[]);
+  if(oldHW.length&&!WD.home.length){WD.home=oldHW;save('whome')}
+  // Wishlist: migrate old wpersonal → wdima/wkatya by user name
+  const oldWP=DB.get('wpersonal',{});
+  U.forEach(u=>{
+    const name=u.name.toLowerCase();
+    const items=oldWP[u.id]||[];
+    if(!items.length)return;
+    if(name.includes('дим')&&!WD.dima.length){WD.dima=items;save('wdima')}
+    else if(name.includes('кат')&&!WD.katya.length){WD.katya=items;save('wkatya')}
+  });
+}
 function init(){
-  if(U.length===0){
-    renderSetup();
-  }else{
+  migrate();
+  if(U.length===0){renderSetup()}
+  else{
     if(!CU||!U.find(u=>u.id===CU)){CU=U[0].id;save('cuid')}
     renderMain();
   }
 }
-
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
