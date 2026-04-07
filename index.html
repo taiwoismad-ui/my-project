@@ -277,6 +277,8 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6}
 .cal-desktop{margin-bottom:16px}
 @media(min-width:900px){.cal-desktop{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}}
 </style>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
 <div id="app">
@@ -304,8 +306,20 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6}
 </div>
 <div id="mroot"></div>
 <script>
+// ── FIREBASE ──
+firebase.initializeApp({
+  apiKey: "FIREBASE_API_KEY",
+  authDomain: "FIREBASE_PROJECT.firebaseapp.com",
+  databaseURL: "https://FIREBASE_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "FIREBASE_PROJECT"
+});
+const db = firebase.database();
+
 // ── CONFIG ──
-const COLORS=['#7C5CF6','#F472B6','#34D399','#FBBF24','#60A5FA','#F87171','#FB923C','#A78BFA'];
+const USERS={
+  husband:{id:'husband',name:'Муж',emoji:'👨',color:'#7C5CF6'},
+  wife:   {id:'wife',   name:'Жена',emoji:'👩',color:'#F472B6'}
+};
 const NCATS={
   food:  {l:'Что поесть',       i:'🍽️',c:'#F59E0B'},
   watch: {l:'Что посмотреть',   i:'🎬',c:'#8B5CF6'},
@@ -314,10 +328,10 @@ const NCATS={
   other: {l:'Другое',           i:'📄',c:'#6B7280'},
 };
 const WTABS=[
-  {id:'dima', l:'Дима',     ic:'👤',store:'wdima'},
-  {id:'katya',l:'Катя',     ic:'👤',store:'wkatya'},
-  {id:'home', l:'Для дома', ic:'🏡',store:'whome'},
-  {id:'max',  l:'Для Макса',ic:'👶',store:'wmax'},
+  {id:'dima', l:'Дима',     ic:'👤'},
+  {id:'katya',l:'Катя',     ic:'👤'},
+  {id:'home', l:'Для дома', ic:'🏡'},
+  {id:'max',  l:'Для Макса',ic:'👶'},
 ];
 const REC={none:'Без повтора',weekly:'Еженедельно',monthly:'Ежемесячно'};
 const PRI={want:'🔥 Очень хочу',some:'⭐ Когда-нибудь'};
@@ -325,37 +339,28 @@ const PRI_C={want:'#F87171',some:'#FBBF24'};
 const MO=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const DOW=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
-// ── STORAGE ──
-const DB={
-  get(k,d=null){try{const v=localStorage.getItem('fp_'+k);return v!==null?JSON.parse(v):d}catch{return d}},
-  set(k,v){try{localStorage.setItem('fp_'+k,JSON.stringify(v))}catch{}}
-};
-
 // ── STATE ──
-let U=DB.get('users',[]);
-let CU=DB.get('cuid',null);
-let SH=DB.get('shop',[]);
-let EV=DB.get('events',[]);
-let NO=DB.get('notes',[]);
-let WD={
-  dima: DB.get('wdima',[]),
-  katya:DB.get('wkatya',[]),
-  home: DB.get('whome',[]),
-  max:  DB.get('wmax',[]),
-};
-let tab='shopping', wstab='dima', nfilt='all';
-let calY=new Date().getFullYear(), calM=new Date().getMonth(), calSel=null;
+let currentUser=localStorage.getItem('fp_who')||null;
+let SH=[],EV=[],NO=[];
+let WD={dima:[],katya:[],home:[],max:[]};
+let tab='shopping',wstab='dima',nfilt='all';
+let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel=null;
 let modalStack=[];
+let navBadges={shopping:0,wishlist:0,calendar:0,notes:0};
 
 // ── UTILS ──
-let _ic=Date.now();
-const gid=()=>(++_ic).toString(36);
 const today=()=>new Date().toISOString().slice(0,10);
-const ini=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
-function av(u,sz=34){
-  const fs=Math.round(sz*.38);
-  return `<span class="av" style="width:${sz}px;height:${sz}px;background:${u.color};font-size:${fs}px">${ini(u.name)}</span>`;
+function snapToArr(snap){
+  if(!snap.val())return[];
+  return Object.entries(snap.val()).map(([k,v])=>({...v,id:k}));
 }
+function av(userId,sz=34){
+  const u=USERS[userId]||{emoji:'👤',color:'#888'};
+  const fs=Math.round(sz*.5);
+  return `<span style="width:${sz}px;height:${sz}px;background:${u.color};border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:${fs}px;flex-shrink:0;line-height:1">${u.emoji}</span>`;
+}
+const cu=()=>USERS[currentUser]||null;
+const partner=()=>USERS[currentUser==='husband'?'wife':'husband'];
 function priBadge(p){
   const c=p==='want'?'rgba(248,113,113,.2)':'rgba(251,191,36,.2)';
   const tc=p==='want'?'#F87171':'#FBBF24';
@@ -365,8 +370,9 @@ function fmtDate(ds){
   if(!ds)return'';
   return new Date(ds+'T12:00').toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
 }
-function timeAgo(iso){
-  const m=Math.floor((Date.now()-new Date(iso))/60000);
+function timeAgo(ts){
+  if(!ts)return'';
+  const m=Math.floor((Date.now()-ts)/60000);
   if(m<1)return'только что';
   if(m<60)return m+' мин. назад';
   const h=Math.floor(m/60);
@@ -379,16 +385,6 @@ function toast(msg){
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),2400);
 }
-function save(k){
-  const m={users:()=>DB.set('users',U),cuid:()=>DB.set('cuid',CU),
-    shop:()=>DB.set('shop',SH),events:()=>DB.set('events',EV),notes:()=>DB.set('notes',NO),
-    wdima:()=>DB.set('wdima',WD.dima),wkatya:()=>DB.set('wkatya',WD.katya),
-    whome:()=>DB.set('whome',WD.home),wmax:()=>DB.set('wmax',WD.max)};
-  m[k]&&m[k]();
-}
-const cu=()=>U.find(u=>u.id===CU)||null;
-const partner=()=>U.find(u=>u.id!==CU)||null;
-
 // ── MODAL ──
 function openModal(html,cb){
   const ov=document.createElement('div');
@@ -416,88 +412,189 @@ function renderTab(t){
   if(el&&fn[t])el.innerHTML=fn[t]();
 }
 function renderNav(){
-  const TABS=[{id:'shopping',i:'🛒',l:'Покупки'},{id:'wishlist',i:'🎁',l:'Вишлисты'},
-    {id:'calendar',i:'📅',l:'Календарь'},{id:'notes',i:'📝',l:'Заметки'},{id:'profile',i:'👤',l:'Профиль'}];
-  const sb=TABS.map(t=>`<button class="sb-item ${t.id===tab?'on':''}" data-tab="${t.id}"><span class="sb-icon">${t.i}</span>${t.l}</button>`).join('');
+  const TABS=[
+    {id:'shopping',i:'🛒',l:'Покупки'},
+    {id:'wishlist',i:'🎁',l:'Вишлисты'},
+    {id:'calendar',i:'📅',l:'Календарь'},
+    {id:'notes',i:'📝',l:'Заметки'},
+    {id:'profile',i:'👤',l:'Профиль'}
+  ];
+  const bdg=id=>navBadges[id]?`<span style="position:absolute;top:2px;right:6px;background:#F87171;color:#fff;border-radius:99px;font-size:9px;font-weight:700;padding:1px 5px;min-width:14px;text-align:center">${navBadges[id]}</span>`:'';
+  const sb=TABS.map(t=>`<button class="sb-item ${t.id===tab?'on':''}" data-tab="${t.id}" style="position:relative"><span class="sb-icon">${t.i}</span>${t.l}${bdg(t.id)}</button>`).join('');
   document.getElementById('sb-nav').innerHTML=sb;
-  const bn=TABS.map(t=>`<button class="bn-item ${t.id===tab?'on':''}" data-tab="${t.id}"><span class="bn-icon">${t.i}</span><span class="bn-label">${t.l}</span></button>`).join('');
+  const bn=TABS.map(t=>`<button class="bn-item ${t.id===tab?'on':''}" data-tab="${t.id}" style="position:relative"><span class="bn-icon">${t.i}</span><span class="bn-label">${t.l}</span>${bdg(t.id)}</button>`).join('');
   document.getElementById('bottom-nav').innerHTML=bn;
 }
 function renderSbUser(){
-  const u=cu();
-  const p=partner();
+  const u=cu(),p=partner();
   const sbUser=document.getElementById('sb-user');
   if(!sbUser||!u)return;
   sbUser.innerHTML=`<div class="sb-user-row" data-a="toggle-user">
-    ${av(u,32)}<div style="flex:1;min-width:0"><div class="sb-user-name">${u.name}</div>
-    ${p?`<div class="sb-user-hint">↔ ${p.name}</div>`:'<div class="sb-user-hint">Профиль</div>'}</div></div>`;
+    ${av(u.id,32)}<div style="flex:1;min-width:0"><div class="sb-user-name">${u.name}</div>
+    <div class="sb-user-hint">↔ ${p.name}</div></div></div>`;
 }
 
-// ── SETUP ──
-function renderSetup(){
-  const isFirst=U.length===0;
-  document.getElementById('setup').style.display='flex';
+// ── WHO ARE YOU ──
+function showWhoModal(){
+  document.getElementById('setup').style.display='none';
   document.getElementById('main').style.display='none';
-  document.getElementById('setup').innerHTML=`
-    <div style="width:100%;max-width:400px">
-      <div style="font-size:48px;text-align:center;margin-bottom:14px">${isFirst?'💜':'👥'}</div>
-      <h1 style="font-size:24px;font-weight:700;text-align:center;margin-bottom:6px">${isFirst?'Семейный планировщик':'Добавить партнёра'}</h1>
-      <p style="font-size:14px;color:var(--t2);text-align:center;margin-bottom:28px;line-height:1.5">${isFirst?'Создайте профиль чтобы начать':'Добавьте второй профиль'}</p>
-      <div style="background:var(--s1);border:1px solid var(--bd2);border-radius:var(--rxl);padding:24px;box-shadow:var(--sh2)">
-        <div class="fg"><label class="lbl">Имя</label><input class="inp" id="sn" placeholder="Введите имя" maxlength="30"></div>
-        <div class="fg"><label class="lbl">Цвет</label>
-          <div class="color-grid" id="scg">${COLORS.map((c,i)=>`<div class="color-swatch ${i===0?'on':''}" data-c="${c}" style="background:${c}">${i===0?'✓':''}</div>`).join('')}</div>
-        </div>
-        <button class="btn btn-pr btn-fw" id="ssubmit" style="font-size:15px;padding:12px">${isFirst?'✨ Начать':'➕ Добавить'}</button>
-        ${!isFirst?'<button class="btn btn-gh btn-fw" id="sskip" style="margin-top:8px">Пропустить</button>':''}
+  const el=document.createElement('div');
+  el.id='who-screen';
+  el.style.cssText='position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:500;padding:24px';
+  el.innerHTML=`
+    <div style="text-align:center;max-width:340px;width:100%">
+      <div style="font-size:52px;margin-bottom:16px">👥</div>
+      <h1 style="font-size:26px;font-weight:700;margin-bottom:8px;color:var(--t1)">Кто ты?</h1>
+      <p style="font-size:14px;color:var(--t2);margin-bottom:32px;line-height:1.5">Выбери свой профиль</p>
+      <div style="display:flex;gap:14px">
+        <button data-who="husband" style="flex:1;padding:20px 12px;background:var(--s1);border:1.5px solid var(--bd2);border-radius:var(--rl);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:inherit">
+          <span style="font-size:36px">👨</span>
+          <span style="font-size:15px;font-weight:600;color:var(--t1)">Я</span>
+          <span style="font-size:12px;color:var(--t2)">муж</span>
+        </button>
+        <button data-who="wife" style="flex:1;padding:20px 12px;background:var(--s1);border:1.5px solid var(--bd2);border-radius:var(--rl);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:inherit">
+          <span style="font-size:36px">👩</span>
+          <span style="font-size:15px;font-weight:600;color:var(--t1)">Жена</span>
+        </button>
       </div>
     </div>`;
-  let selColor=COLORS[0];
-  document.querySelectorAll('#scg .color-swatch').forEach(sw=>{
-    sw.addEventListener('click',()=>{
-      document.querySelectorAll('#scg .color-swatch').forEach(s=>{s.classList.remove('on');s.textContent=''});
-      sw.classList.add('on');sw.textContent='✓';selColor=sw.dataset.c;
+  document.body.appendChild(el);
+  el.querySelectorAll('[data-who]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      currentUser=btn.dataset.who;
+      localStorage.setItem('fp_who',currentUser);
+      el.remove();
+      startApp();
     });
   });
-  document.getElementById('ssubmit').addEventListener('click',()=>{
-    const name=document.getElementById('sn').value.trim();
-    if(!name){toast('Введите имя');return}
-    const user={id:gid(),name,color:selColor};
-    U.push(user);save('users');CU=user.id;save('cuid');
-    renderMain();
-  });
-  const sk=document.getElementById('sskip');
-  if(sk)sk.addEventListener('click',renderMain);
 }
-function renderMain(){
+
+// ── APP START ──
+async function startApp(){
   document.getElementById('setup').style.display='none';
   document.getElementById('main').style.display='';
   renderNav();renderSbUser();goTab(tab);
-  checkRecurring();
+  try{
+    await loadAllData();
+    checkRecurring();
+    await checkActivity();
+  }catch(e){console.warn('Firebase error:',e)}
+  setupFirebaseListeners();
 }
+
+async function loadAllData(){
+  const [s,w,n,c]=await Promise.all([
+    db.ref('purchases').once('value'),
+    db.ref('wishlist').once('value'),
+    db.ref('notes').once('value'),
+    db.ref('calendar').once('value'),
+  ]);
+  SH=snapToArr(s);
+  const aw=snapToArr(w);
+  WD={dima:[],katya:[],home:[],max:[]};
+  aw.forEach(it=>{if(WD[it.group]!==undefined)WD[it.group].push(it)});
+  NO=snapToArr(n);
+  EV=snapToArr(c);
+  renderTab(tab);
+}
+
 function checkRecurring(){
   const td=today();
-  SH=SH.map(it=>{
-    if(it.recurrence==='none'||!it.checked)return it;
+  SH.forEach(it=>{
+    if(!it.recurrence||it.recurrence==='none'||!it.done)return;
     const diff=Math.floor((new Date(td)-new Date(it.lastRec||td))/86400000);
     if((it.recurrence==='weekly'&&diff>=7)||(it.recurrence==='monthly'&&diff>=28))
-      return{...it,checked:false,lastRec:td};
-    return it;
+      db.ref('purchases/'+it.id).update({done:false,lastRec:td,updatedAt:Date.now()});
   });
-  save('shop');
+}
+
+function setupFirebaseListeners(){
+  db.ref('purchases').on('value',snap=>{
+    SH=snapToArr(snap);
+    if(tab==='shopping')renderTab('shopping');
+  });
+  db.ref('wishlist').on('value',snap=>{
+    const aw=snapToArr(snap);
+    WD={dima:[],katya:[],home:[],max:[]};
+    aw.forEach(it=>{if(WD[it.group]!==undefined)WD[it.group].push(it)});
+    if(tab==='wishlist')renderTab('wishlist');
+  });
+  db.ref('notes').on('value',snap=>{
+    NO=snapToArr(snap);
+    if(tab==='notes')renderTab('notes');
+  });
+  db.ref('calendar').on('value',snap=>{
+    EV=snapToArr(snap);
+    if(tab==='calendar')renderTab('calendar');
+  });
+}
+// ── ACTIVITY NOTIFICATIONS ──
+async function checkActivity(){
+  try{
+    const snap=await db.ref('lastSeen/'+currentUser).once('value');
+    const lastSeen=snap.val()||0;
+    const p=partner();
+    let ns=0,nn=0,nc=0,nw=0;
+    SH.forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)ns++});
+    NO.forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)nn++});
+    EV.forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)nc++});
+    Object.values(WD).flat().forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)nw++});
+    const total=ns+nn+nc+nw;
+    if(total>0){
+      navBadges={shopping:ns,wishlist:nw,calendar:nc,notes:nn};
+      renderNav();
+      showActivityToast(p.name,{ns,nn,nc,nw});
+    }
+    db.ref('lastSeen/'+currentUser).set(Date.now());
+  }catch(e){console.warn('checkActivity:',e)}
+}
+
+function showActivityToast(pName,{ns,nn,nc,nw}){
+  const parts=[];
+  if(ns>0)parts.push(ns+' покупок');
+  if(nn>0)parts.push(nn+' заметок');
+  if(nc>0)parts.push(nc+' событий');
+  if(nw>0)parts.push(nw+' желаний');
+  const maxSec=[{t:'shopping',n:ns},{t:'notes',n:nn},{t:'calendar',n:nc},{t:'wishlist',n:nw}]
+    .sort((a,b)=>b.n-a.n)[0].t;
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#fff;color:#111;border-radius:16px;padding:14px 18px;z-index:9999;box-shadow:0 4px 24px rgba(0,0,0,.25);min-width:280px;max-width:360px;width:calc(100% - 32px);animation:t-in .2s ease;display:flex;flex-direction:column;gap:10px';
+  el.innerHTML=`<div style="font-size:13px;font-weight:500;line-height:1.4">👀 Пока тебя не было: ${pName} добавил(а) ${parts.join(', ')}</div>
+    <div style="display:flex;gap:8px">
+      <button id="act-view" style="flex:1;padding:7px;background:#7C5CF6;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Посмотреть</button>
+      <button id="act-close" style="flex:1;padding:7px;background:#f0f0f0;color:#333;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Закрыть</button>
+    </div>`;
+  document.body.appendChild(el);
+  let timer=setTimeout(()=>el.remove(),8000);
+  el.querySelector('#act-view').addEventListener('click',()=>{
+    clearTimeout(timer);el.remove();
+    goTab(maxSec);
+    setTimeout(highlightNewItems,200);
+  });
+  el.querySelector('#act-close').addEventListener('click',()=>{
+    clearTimeout(timer);el.remove();
+  });
+}
+
+function highlightNewItems(){
+  document.querySelectorAll('.shop-item,.note-card,.wish-item,.wish-card,.ev-card').forEach(c=>{
+    c.style.transition='box-shadow .3s,border-color .3s';
+    c.style.boxShadow='0 0 0 2px rgba(96,165,250,.5),0 0 16px rgba(96,165,250,.3)';
+    c.style.borderColor='rgba(96,165,250,.5)';
+    setTimeout(()=>{c.style.boxShadow='';c.style.borderColor=''},3000);
+  });
 }
 
 // ── SHOPPING ──
 function rShopping(){
-  const unc=SH.filter(i=>!i.checked),ckd=SH.filter(i=>i.checked);
+  const unc=SH.filter(i=>!i.done),ckd=SH.filter(i=>i.done);
   const rItem=it=>{
-    const u=U.find(x=>x.id===it.addedBy);
-    const recBadge=it.recurrence!=='none'?`<span class="badge" style="background:var(--acl);color:var(--ac);font-size:10px">🔁 ${it.recurrence==='weekly'?'Еженед.':'Ежемес.'}</span>`:'';
-    return`<div class="shop-item ${it.checked?'checked':''}" data-id="${it.id}">
-      <button class="checkbox ${it.checked?'on':''}" data-a="toggle-sh" data-id="${it.id}">${it.checked?'✓':''}</button>
+    const recBadge=it.recurrence&&it.recurrence!=='none'?`<span class="badge" style="background:var(--acl);color:var(--ac);font-size:10px">🔁 ${it.recurrence==='weekly'?'Еженед.':'Ежемес.'}</span>`:'';
+    return`<div class="shop-item ${it.done?'checked':''}" data-id="${it.id}">
+      <button class="checkbox ${it.done?'on':''}" data-a="toggle-sh" data-id="${it.id}">${it.done?'✓':''}</button>
       <div style="flex:1;min-width:0">
-        <div class="shop-name">${it.name}</div>
-        ${recBadge||u?`<div style="display:flex;align-items:center;gap:5px;margin-top:3px">${recBadge}${u?av(u,16):''}</div>`:''}
+        <div class="shop-name">${it.name||''}</div>
+        ${recBadge||it.author?`<div style="display:flex;align-items:center;gap:5px;margin-top:3px">${recBadge}${it.author?av(it.author,16):''}</div>`:''}
       </div>
       <div class="item-acts">
         <button class="btn-ic" data-a="edit-sh" data-id="${it.id}">✏️</button>
@@ -505,15 +602,13 @@ function rShopping(){
       </div>
     </div>`;
   };
-  return`
-    <div class="page-hdr"><span class="page-title">Покупки</span>
+  return`<div class="page-hdr"><span class="page-title">Покупки</span>
       <div class="page-acts"><button class="btn-add" data-a="add-sh">+</button></div>
     </div>
     <div style="padding:0 24px 80px;max-width:720px">
     ${SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`:''}
     ${unc.length?`<div class="shop-list">${unc.map(rItem).join('')}</div>`:''}
-    ${ckd.length?`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px">
+    ${ckd.length?`<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px">
         <span style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Куплено (${ckd.length})</span>
         <button class="btn btn-sm" style="color:var(--rd);background:var(--rdl)" data-a="clear-ckd">Очистить</button>
       </div>
@@ -524,7 +619,7 @@ function openShModal(id=null){
   const it=id?SH.find(i=>i.id===id):null;
   openModal(`<div class="modal-title">${it?'Изменить товар':'Добавить товар'}</div>
     <div class="fg"><label class="lbl">Название</label>
-      <input class="inp" id="sh-n" placeholder="Молоко, хлеб…" value="${it?it.name:''}" maxlength="80"></div>
+      <input class="inp" id="sh-n" placeholder="Молоко, хлеб…" value="${it?it.name||'':''}" maxlength="80"></div>
     <div class="fg"><label class="lbl">Повторение</label>
       <div class="chip-row">${Object.entries(REC).map(([k,v])=>`<button class="chip ${(!it&&k==='none')||(it&&it.recurrence===k)?'on':''}" data-rec="${k}">${v}</button>`).join('')}</div>
     </div>
@@ -537,12 +632,14 @@ function saveSh(id){
   const name=document.getElementById('sh-n')?.value.trim();
   if(!name){toast('Введите название');return}
   const rec=document.querySelector('.chip[data-rec].on')?.dataset.rec||'none';
-  const u=cu();
-  if(id){SH=SH.map(i=>i.id===id?{...i,name,recurrence:rec}:i)}
-  else{SH.push({id:gid(),name,checked:false,addedBy:u.id,addedByName:u.name,recurrence:rec,lastRec:today(),at:new Date().toISOString()})}
-  save('shop');closeModal();renderTab('shopping');
+  const now=Date.now();
+  if(id){
+    db.ref('purchases/'+id).update({name,recurrence:rec,updatedAt:now});
+  }else{
+    db.ref('purchases').push({name,done:false,recurrence:rec,lastRec:today(),author:currentUser,createdAt:now,updatedAt:now});
+  }
+  closeModal();
 }
-
 // ── WISHLIST ──
 function rWishlist(){
   const stabs=WTABS.map(t=>`<button class="stab ${wstab===t.id?'on':''}" data-ws="${t.id}">${t.ic} ${t.l}</button>`).join('');
@@ -553,7 +650,7 @@ function rWishlist(){
   if(items.length===0){
     const labels={dima:'личный список Димы',katya:'личный список Кати',home:'вещи для дома',max:'вещи для Макса'};
     body=`<div class="empty"><div class="empty-ic">${wt.ic}</div><div class="empty-t">Список пуст</div><div class="empty-s">Добавьте ${labels[wstab]}</div></div>`;
-  } else if(isCard){
+  }else if(isCard){
     const cards=items.map(it=>{
       const thumb=it.imageUrl?`<img src="${it.imageUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:`<div style="font-size:28px">${wt.ic}</div>`;
       return`<div class="wish-card">
@@ -565,7 +662,7 @@ function rWishlist(){
         </div></div>`;
     }).join('');
     body=`<div class="wish-grid">${cards}</div>`;
-  } else {
+  }else{
     const rows=items.map(it=>`<div class="wish-item">
       <div class="pri-dot" style="background:${PRI_C[it.priority]||'#666'}"></div>
       <div style="flex:1;min-width:0">
@@ -577,8 +674,7 @@ function rWishlist(){
     </div>`).join('');
     body=`<div style="padding:14px 20px 80px">${rows}</div>`;
   }
-  return`
-    <div class="page-hdr"><span class="page-title">Вишлисты</span>
+  return`<div class="page-hdr"><span class="page-title">Вишлисты</span>
       <div class="page-acts"><button class="btn-add" data-a="add-wl">+</button></div>
     </div>
     <div class="subtabs">${stabs}</div>${body}`;
@@ -620,18 +716,16 @@ function saveWl(){
   const title=document.getElementById('wl-title')?.value.trim();
   if(!title){toast('Введите название');return}
   const pri=document.querySelector('.chip[data-pri].on')?.dataset.pri||'some';
-  const u=cu();
   const url=(document.getElementById('wl-url')||document.getElementById('wl-urlb'))?.value.trim()||null;
   const img=document.getElementById('wl-img')?.value.trim()||null;
-  WD[wstab].push({id:gid(),title,url,imageUrl:img,priority:pri,addedBy:u.id,addedByName:u.name,at:new Date().toISOString()});
-  save('w'+wstab);closeModal();renderTab('wishlist');toast('✅ Добавлено');
+  const now=Date.now();
+  db.ref('wishlist').push({title,url,imageUrl:img,priority:pri,group:wstab,author:currentUser,createdAt:now,updatedAt:now});
+  closeModal();toast('✅ Добавлено');
 }
 function delWl(id){
   if(!confirm('Удалить?'))return;
-  WD[wstab]=WD[wstab].filter(i=>i.id!==id);
-  save('w'+wstab);renderTab('wishlist');
+  db.ref('wishlist/'+id).remove();
 }
-
 // ── CALENDAR ──
 function rCalendar(){
   const td=today(),sel=calSel||td;
@@ -648,7 +742,7 @@ function rCalendar(){
   for(let d=1;d<=dim;d++){
     const ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const evs=evMap[ds]||[];
-    const dots=evs.slice(0,3).map(e=>`<span class="ev-dot" style="background:${e.createdByColor}"></span>`).join('');
+    const dots=evs.slice(0,3).map(e=>{const uu=USERS[e.author];return`<span class="ev-dot" style="background:${uu?uu.color:'#666'}"></span>`}).join('');
     cells+=`<div class="cal-day ${ds===td?'today':''} ${ds===sel?'selected':''}" data-date="${ds}">
       <span>${d}</span>${dots?`<div class="ev-dots">${dots}</div>`:''}
     </div>`;
@@ -660,36 +754,36 @@ function rCalendar(){
     cells+=`<div class="cal-day other-month" data-date="${ds}"><span>${d}</span></div>`;
   }
   const dayEvs=evMap[sel]||[];
+  const uu=id=>USERS[id]||{color:'#666',emoji:'👤',name:''};
   const evHtml=dayEvs.length?dayEvs.map(e=>`
     <div class="ev-card">
-      <div class="ev-bar" style="background:${e.createdByColor}"></div>
+      <div class="ev-bar" style="background:${uu(e.author).color}"></div>
       <div class="ev-body">
         <div class="ev-title">${e.title}</div>
-        <div class="ev-meta">${e.time?`⏰ ${e.time} · `:''}<span>👤 ${e.createdByName}</span>${e.note?` · <span>${e.note}</span>`:''}</div>
+        <div class="ev-meta">${e.time?`⏰ ${e.time} · `:''}<span>${uu(e.author).emoji} ${uu(e.author).name}</span>${e.note?` · <span>${e.note}</span>`:''}</div>
       </div>
       <button class="btn-ic rd" data-a="del-ev" data-id="${e.id}" style="margin:10px 10px 0 0">🗑️</button>
     </div>`).join('')
     :`<div style="text-align:center;padding:20px;color:var(--t3);font-size:13px">Нет событий</div>`;
-  const calHtml=`
-    <div class="cal-card">
-      <div class="cal-nav-row">
-        <button class="btn btn-sc btn-sm" data-a="cal-prev">◀</button>
-        <span class="cal-month">${MO[calM]} ${calY}</span>
-        <button class="btn btn-sc btn-sm" data-a="cal-next">▶</button>
-      </div>
-      <div class="cal-dow-row">${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
-      <div class="cal-grid">${cells}</div>
-    </div>`;
-  const evPanel=`<div class="ev-panel">
-    <div style="font-size:15px;font-weight:700;margin-bottom:10px;text-transform:capitalize">${fmtDate(sel)}</div>
-    ${evHtml}
-  </div>`;
-  return`
-    <div class="page-hdr"><span class="page-title">Календарь</span>
+  return`<div class="page-hdr"><span class="page-title">Календарь</span>
       <div class="page-acts"><button class="btn-add" data-a="add-ev">+</button></div>
     </div>
     <div class="cal-wrap">
-      <div class="cal-desktop">${calHtml}${evPanel}</div>
+      <div class="cal-desktop">
+        <div class="cal-card">
+          <div class="cal-nav-row">
+            <button class="btn btn-sc btn-sm" data-a="cal-prev">◀</button>
+            <span class="cal-month">${MO[calM]} ${calY}</span>
+            <button class="btn btn-sc btn-sm" data-a="cal-next">▶</button>
+          </div>
+          <div class="cal-dow-row">${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('')}</div>
+          <div class="cal-grid">${cells}</div>
+        </div>
+        <div class="ev-panel">
+          <div style="font-size:15px;font-weight:700;margin-bottom:10px;text-transform:capitalize">${fmtDate(sel)}</div>
+          ${evHtml}
+        </div>
+      </div>
     </div>`;
 }
 function openEvModal(){
@@ -709,17 +803,17 @@ function saveEv(){
   const title=document.getElementById('ev-t')?.value.trim();
   const date=document.getElementById('ev-d')?.value;
   if(!title||!date){toast('Заполните название и дату');return}
-  const u=cu();
-  EV.push({id:gid(),title,date,time:document.getElementById('ev-tm')?.value||null,
+  const now=Date.now();
+  db.ref('calendar').push({title,date,
+    time:document.getElementById('ev-tm')?.value||null,
     note:document.getElementById('ev-n')?.value.trim()||null,
-    createdBy:u.id,createdByName:u.name,createdByColor:u.color,at:new Date().toISOString()});
-  save('events');calSel=date;closeModal();renderTab('calendar');toast('✅ Добавлено');
+    author:currentUser,createdAt:now,updatedAt:now});
+  calSel=date;closeModal();toast('✅ Добавлено');
 }
-
 // ── NOTES ──
 function rNotes(){
   const filtered=nfilt==='all'?NO:NO.filter(n=>n.category===nfilt);
-  const sorted=[...filtered].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+  const sorted=[...filtered].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
   const filterChips=`<div class="notes-filters">
     <button class="chip ${nfilt==='all'?'on':''}" data-nf="all">Все</button>
     ${Object.entries(NCATS).map(([k,v])=>`<button class="chip ${nfilt===k?'on':''}" data-nf="${k}"
@@ -734,12 +828,11 @@ function rNotes(){
       </div>
       <div class="note-title">${n.title}</div>
       ${n.content?`<div class="note-preview">${n.content}</div>`:''}
-      <div class="note-meta">✏️ ${n.lastEditedByName}</div>
+      ${n.author?`<div class="note-meta">${av(n.author,14)} ${USERS[n.author]?.name||''}</div>`:''}
     </div>`;
   }).join('')
   :`<div class="empty" style="grid-column:1/-1"><div class="empty-ic">📝</div><div class="empty-t">Нет заметок</div><div class="empty-s">Нажмите + чтобы создать</div></div>`;
-  return`
-    <div class="page-hdr"><span class="page-title">Заметки</span>
+  return`<div class="page-hdr"><span class="page-title">Заметки</span>
       <div class="page-acts"><button class="btn-add" data-a="add-note">+</button></div>
     </div>
     ${filterChips}
@@ -757,7 +850,7 @@ function openNoteModal(id=null){
     <div class="fg"><label class="lbl">Заголовок *</label>
       <input class="inp" id="no-t" placeholder="Название" value="${n?n.title:''}" maxlength="100"></div>
     <div class="fg"><label class="lbl">Содержимое</label>
-      <textarea class="inp" id="no-c" placeholder="Напишите здесь…" rows="6">${n?n.content:''}</textarea></div>
+      <textarea class="inp" id="no-c" placeholder="Напишите здесь…" rows="6">${n?n.content||'':''}</textarea></div>
     <div class="modal-acts">
       ${id?`<button class="btn btn-rd" data-a="del-note" data-id="${id}" style="flex:0;padding:9px 14px">🗑️</button>`:''}
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
@@ -778,41 +871,29 @@ function saveNote(id){
   if(!title){toast('Введите заголовок');return}
   const content=document.getElementById('no-c')?.value.trim()||'';
   const cat=document.querySelector('.chip[data-cat].on')?.dataset.cat||'other';
-  const u=cu(),now=new Date().toISOString();
-  if(id){NO=NO.map(n=>n.id===id?{...n,title,content,category:cat,lastEditedBy:u.id,lastEditedByName:u.name,updatedAt:now}:n)}
-  else{NO.push({id:gid(),title,content,category:cat,lastEditedBy:u.id,lastEditedByName:u.name,createdAt:now,updatedAt:now})}
-  save('notes');closeModal();renderTab('notes');toast('✅ Сохранено');
+  const now=Date.now();
+  if(id){
+    db.ref('notes/'+id).update({title,content,category:cat,updatedAt:now});
+  }else{
+    db.ref('notes').push({title,content,category:cat,author:currentUser,createdAt:now,updatedAt:now});
+  }
+  closeModal();toast('✅ Сохранено');
 }
 
 // ── PROFILE ──
 function rProfile(){
   const u=cu();if(!u)return'';
   const p=partner();
-  return`
-    <div class="prof-wrap">
-      <div class="prof-hero">${av(u,56)}
+  return`<div class="prof-wrap">
+      <div class="prof-hero">${av(u.id,56)}
         <div><div class="prof-name">${u.name}</div><div class="prof-role">Текущий профиль</div></div>
       </div>
-      ${p?`<div class="prof-card">
+      <div class="prof-card">
         <div class="prof-card-title">Партнёр</div>
         <div style="display:flex;align-items:center;gap:12px;padding:10px 15px;border-top:1px solid var(--bd)">
-          ${av(p,40)}<div style="flex:1"><div style="font-size:14px;font-weight:600">${p.name}</div></div>
-          <button class="btn btn-sc btn-sm" data-a="switch-u" data-id="${p.id}">↔ Переключить</button>
-        </div></div>`
-      :`<div class="prof-card">
-        <div class="prof-card-title">Партнёр</div>
-        <div style="padding:12px 15px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
-          <span style="font-size:14px;color:var(--t2)">Не добавлен</span>
-          <button class="btn btn-pr btn-sm" data-a="add-partner">+ Добавить</button>
-        </div></div>`}
-      <div class="prof-card">
-        <div class="prof-card-title">Ваш цвет</div>
-        <div style="padding:12px 15px;border-top:1px solid var(--bd)">
-          <div class="color-grid">
-            ${COLORS.map(c=>`<div class="color-swatch ${u.color===c?'on':''}" data-a="chg-color" data-c="${c}" style="background:${c}">${u.color===c?'✓':''}</div>`).join('')}
-          </div>
-        </div>
-      </div>
+          ${av(p.id,40)}<div style="flex:1"><div style="font-size:14px;font-weight:600">${p.name}</div></div>
+          <button class="btn btn-sc btn-sm" data-a="switch-u">↔ Переключить</button>
+        </div></div>
       <div class="prof-card">
         <div class="prof-card-title">Статистика</div>
         ${[['Покупок',SH.length],['Событий',EV.length],['Заметок',NO.length],
@@ -822,105 +903,77 @@ function rProfile(){
       <button class="btn btn-rd btn-fw" style="margin-top:4px" data-a="reset">⚠️ Сбросить все данные</button>
     </div>`;
 }
-
 // ── EVENT DELEGATION ──
 document.addEventListener('click',function(e){
-  // Tab navigation
   const tb=e.target.closest('[data-tab]');
   if(tb){goTab(tb.dataset.tab);return}
-  // Wishlist subtabs
   const ws=e.target.closest('[data-ws]');
   if(ws){wstab=ws.dataset.ws;renderTab('wishlist');return}
-  // Notes filter
   const nf=e.target.closest('[data-nf]');
   if(nf){nfilt=nf.dataset.nf;renderTab('notes');return}
-  // Calendar day
   const cd=e.target.closest('.cal-day[data-date]');
   if(cd){calSel=cd.dataset.date;renderTab('calendar');return}
-  // Chip toggles (recurrence)
   const rc=e.target.closest('.chip[data-rec]');
   if(rc){rc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));rc.classList.add('on');return}
-  // Priority chips
   const pc=e.target.closest('.chip[data-pri]');
   if(pc){pc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));pc.classList.add('on');return}
-
   const btn=e.target.closest('[data-a]');
   if(!btn)return;
   const a=btn.dataset.a,id=btn.dataset.id;
   switch(a){
-    case 'close-mo': closeModal();break;
-    // Shopping
-    case 'add-sh': openShModal();break;
-    case 'edit-sh': openShModal(id);break;
-    case 'save-sh': saveSh(id||null);break;
-    case 'toggle-sh':
-      SH=SH.map(i=>i.id===id?{...i,checked:!i.checked}:i);
-      save('shop');renderTab('shopping');break;
+    case 'close-mo':closeModal();break;
+    case 'add-sh':openShModal();break;
+    case 'edit-sh':openShModal(id);break;
+    case 'save-sh':saveSh(id||null);break;
+    case 'toggle-sh':{
+      const it=SH.find(i=>i.id===id);
+      if(it)db.ref('purchases/'+id).update({done:!it.done,updatedAt:Date.now()});
+      break;
+    }
     case 'del-sh':
-      if(confirm('Удалить?')){SH=SH.filter(i=>i.id!==id);save('shop');renderTab('shopping')}break;
+      if(confirm('Удалить?'))db.ref('purchases/'+id).remove();break;
     case 'clear-ckd':
-      if(confirm('Удалить купленные?')){SH=SH.filter(i=>!i.checked);save('shop');renderTab('shopping')}break;
-    // Wishlist
-    case 'add-wl': openWlModal();break;
-    case 'save-wl': saveWl();break;
-    case 'del-wl': delWl(id);break;
-    // Calendar
-    case 'cal-prev': if(calM===0){calM=11;calY--}else calM--;renderTab('calendar');break;
-    case 'cal-next': if(calM===11){calM=0;calY++}else calM++;renderTab('calendar');break;
-    case 'add-ev': openEvModal();break;
-    case 'save-ev': saveEv();break;
+      if(confirm('Удалить купленные?'))
+        SH.filter(i=>i.done).forEach(i=>db.ref('purchases/'+i.id).remove());
+      break;
+    case 'add-wl':openWlModal();break;
+    case 'save-wl':saveWl();break;
+    case 'del-wl':delWl(id);break;
+    case 'cal-prev':if(calM===0){calM=11;calY--}else calM--;renderTab('calendar');break;
+    case 'cal-next':if(calM===11){calM=0;calY++}else calM++;renderTab('calendar');break;
+    case 'add-ev':openEvModal();break;
+    case 'save-ev':saveEv();break;
     case 'del-ev':
-      if(confirm('Удалить событие?')){EV=EV.filter(e=>e.id!==id);save('events');renderTab('calendar')}break;
-    // Notes
-    case 'add-note': openNoteModal();break;
-    case 'edit-note': openNoteModal(id);break;
-    case 'save-note': saveNote(id||null);break;
+      if(confirm('Удалить событие?'))db.ref('calendar/'+id).remove();break;
+    case 'add-note':openNoteModal();break;
+    case 'edit-note':openNoteModal(id);break;
+    case 'save-note':saveNote(id||null);break;
     case 'del-note':
-      if(confirm('Удалить заметку?')){NO=NO.filter(n=>n.id!==id);save('notes');closeModal();renderTab('notes')}break;
-    // Profile
-    case 'chg-color':
-      U=U.map(u=>u.id===CU?{...u,color:btn.dataset.c}:u);
-      save('users');renderTab('profile');renderSbUser();toast('Цвет изменён');break;
-    case 'add-partner': renderSetup();break;
+      if(confirm('Удалить заметку?')){db.ref('notes/'+id).remove();closeModal();}break;
     case 'switch-u':
-      CU=id;save('cuid');toast('Переключились на '+U.find(u=>u.id===id)?.name);
-      renderNav();renderSbUser();renderTab(tab);break;
     case 'toggle-user':
-      const p=partner();
-      if(p){CU=p.id;save('cuid');toast('Переключились на '+p.name);renderNav();renderSbUser();renderTab(tab)}
-      else goTab('profile');break;
+      currentUser=currentUser==='husband'?'wife':'husband';
+      localStorage.setItem('fp_who',currentUser);
+      toast('Переключились на '+cu().name);
+      renderNav();renderSbUser();renderTab(tab);break;
     case 'reset':
-      if(confirm('Удалить ВСЕ данные?')&&confirm('Точно уверены?')){localStorage.clear();location.reload()}break;
+      if(confirm('Удалить ВСЕ данные?')&&confirm('Точно уверены?')){
+        localStorage.removeItem('fp_who');
+        Promise.all([
+          db.ref('purchases').remove(),
+          db.ref('wishlist').remove(),
+          db.ref('notes').remove(),
+          db.ref('calendar').remove(),
+          db.ref('lastSeen').remove()
+        ]).then(()=>location.reload());
+      }break;
   }
 });
 
-// ── INIT + MIGRATION ──
-function migrate(){
-  // Notes: rename old categories
-  const catMap={recipes:'food',travel:'places',passwords:'other'};
-  let changed=false;
-  NO=NO.map(n=>{if(catMap[n.category]){changed=true;return{...n,category:catMap[n.category]}}return n});
-  if(changed)save('notes');
-  // Wishlist: migrate old hwish → whome
-  const oldHW=DB.get('hwish',[]);
-  if(oldHW.length&&!WD.home.length){WD.home=oldHW;save('whome')}
-  // Wishlist: migrate old wpersonal → wdima/wkatya by user name
-  const oldWP=DB.get('wpersonal',{});
-  U.forEach(u=>{
-    const name=u.name.toLowerCase();
-    const items=oldWP[u.id]||[];
-    if(!items.length)return;
-    if(name.includes('дим')&&!WD.dima.length){WD.dima=items;save('wdima')}
-    else if(name.includes('кат')&&!WD.katya.length){WD.katya=items;save('wkatya')}
-  });
-}
+// ── INIT ──
 function init(){
-  migrate();
-  if(U.length===0){renderSetup()}
-  else{
-    if(!CU||!U.find(u=>u.id===CU)){CU=U[0].id;save('cuid')}
-    renderMain();
-  }
+  if(!currentUser)showWhoModal();
+  else startApp();
 }
 document.addEventListener('DOMContentLoaded',init);
 </script>
