@@ -277,6 +277,9 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:url("data:im
 .color-swatch:hover,.color-sw:hover{transform:scale(1.1)}
 .color-swatch.on,.color-sw.on{border-color:rgba(0,0,0,.25)}
 
+/* ── SHOP SUB-TABS ── */
+.sh-stab{border-radius:100px;padding:8px 20px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .12s;white-space:nowrap}
+
 /* ── SETUP ── */
 .setup-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:28px;width:100%;max-width:420px;box-shadow:var(--shadow-md)}
 </style>
@@ -317,6 +320,9 @@ firebase.initializeApp({
   projectId: "family-planner-86c68"
 });
 const db = firebase.database();
+
+// ── ANTHROPIC API KEY (set for smart emoji feature) ──
+const ANTHROPIC_API_KEY='';
 
 // ── CONFIG ──
 const USERS={
@@ -405,6 +411,8 @@ let navBadges={shopping:0,wishlist:0,calendar:0,notes:0};
 let ckdExpanded=false;
 let shSearchQ='';
 let wlCollapsed={};
+let hiddenProducts=new Set();
+let shViewTab='pick';
 
 // ── UTILS ──
 const today=()=>new Date().toISOString().slice(0,10);
@@ -634,7 +642,7 @@ function wlGroupLabelById(id){
 }
 
 async function loadAllData(){
-  const [s,w,n,c,pc,cp,nc,wg]=await Promise.all([
+  const [s,w,n,c,pc,cp,nc,wg,hp]=await Promise.all([
     db.ref('purchases').once('value'),
     db.ref('wishlist').once('value'),
     db.ref('notes').once('value'),
@@ -643,6 +651,7 @@ async function loadAllData(){
     db.ref('customProducts').once('value'),
     db.ref('noteCategories').once('value'),
     db.ref('wishlistGroups').once('value'),
+    db.ref('hiddenProducts').once('value'),
   ]);
   SH=snapToArr(s);
   WL=snapToArr(w);
@@ -656,6 +665,8 @@ async function loadAllData(){
         PRODUCT_CATALOG.push({id:k,name:v.name,emoji:v.emoji||'🛒',count:v.count||1});
     });
   }
+  const hpVal=hp.val()||{};
+  hiddenProducts=new Set(Object.keys(hpVal).filter(k=>hpVal[k]));
   if(!nc.val()){
     const upd={};DEFAULT_NOTE_CATS.forEach(c=>upd[c.id]={label:c.label,icon:c.icon,color:c.color});
     await db.ref('noteCategories').set(upd);NOTE_CATS=[...DEFAULT_NOTE_CATS];
@@ -693,6 +704,11 @@ function setupFirebaseListeners(){
   db.ref('calendar').on('value',snap=>{
     EV=snapToArr(snap);
     if(tab==='calendar')renderTab('calendar');
+  });
+  db.ref('hiddenProducts').on('value',snap=>{
+    const v=snap.val()||{};
+    hiddenProducts=new Set(Object.keys(v).filter(k=>v[k]));
+    if(tab==='shopping')renderTab('shopping');
   });
   db.ref('noteCategories').on('value',snap=>{
     if(snap.val())NOTE_CATS=buildNoteCats(snap.val());
@@ -755,7 +771,66 @@ function highlightNewItems(){
 
 // ── SHOPPING ──
 function sortedCatalog(){
-  return [...PRODUCT_CATALOG].sort((a,b)=>b.count-a.count);
+  return [...PRODUCT_CATALOG]
+    .filter(p=>!hiddenProducts.has(p.id))
+    .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ru'));
+}
+function guessEmoji(name){
+  const n=name.toLowerCase();
+  const rules=[
+    ['молоко,сливки,кефир,ряженка,простокваша,йогурт','🥛'],
+    ['хлеб,батон,булка,багет,буханк','🍞'],
+    ['курица,куриц,цыплёнок,крылышк','🍗'],
+    ['мясо,говядина,свинина,баранина,телятина,фарш','🥩'],
+    ['рыба,семга,тунец,лосось,треска,сёмга,судак,горбуша','🐟'],
+    ['яйц','🥚'],
+    ['сыр','🧀'],
+    ['масло','🧈'],
+    ['помидор,томат,огурец,капуст,картошк,картофел,лук,чеснок,свёкл,свекл,морков,перец,кабачк,баклажан','🥦'],
+    ['яблок,груш,апельсин,мандарин,лимон,лайм,банан,персик,абрикос,слив','🍎'],
+    ['клубник,ягод,малин,черник,виноград','🍓'],
+    ['сок,напиток','🧃'],
+    ['пиво,алкогол,водка,коньяк,виски','🍺'],
+    ['вино','🍷'],
+    ['кофе','☕'],
+    ['чай','🍵'],
+    ['шоколад,конфет,сладк','🍫'],
+    ['мороженое','🍦'],
+    ['торт,пирог,печень','🎂'],
+    ['орех','🥜'],
+    ['корм,кошк,котов,кот ,собак','🐾'],
+    ['вода','💧'],
+  ];
+  for(const [keys,emoji] of rules){
+    if(keys.split(',').some(k=>n.includes(k)))return emoji;
+  }
+  return null;
+}
+async function fetchEmojiFromClaude(name){
+  if(!ANTHROPIC_API_KEY)return'🛒';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'x-api-key':ANTHROPIC_API_KEY,
+        'anthropic-version':'2023-06-01',
+        'content-type':'application/json',
+        'anthropic-dangerous-allow-browser':'true',
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:10,
+        system:'Ты помогаешь подобрать emoji для продукта. Отвечай ТОЛЬКО одним emoji, без текста.',
+        messages:[{role:'user',content:`Какой emoji подходит для продукта: ${name}?`}]
+      }),
+      signal:AbortSignal.timeout(8000)
+    });
+    if(!r.ok)return'🛒';
+    const j=await r.json();
+    const text=j.content?.[0]?.text?.trim()||'🛒';
+    const match=text.match(/(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/u);
+    return match?match[0]:'🛒';
+  }catch{return'🛒'}
 }
 function activeShNames(){
   return new Set(SH.filter(i=>!i.done).map(i=>i.name));
@@ -777,39 +852,55 @@ function rShopping(){
         ${qty?`<div class="shop-qty">${qty}</div>`:''}
         ${it.author?`<div style="margin-top:2px">${userBadge(it.author)}</div>`:''}
       </div>
+      <div class="item-acts">
+        <button class="btn-ic rd" data-a="del-sh" data-id="${it.id}">🗑️</button>
+      </div>
       <button class="checkbox ${it.done?'on':''}" data-a="toggle-sh" data-id="${it.id}">${it.done?'✓':''}</button>
     </div>`;
   };
 
-  const chips=sortedCatalog().map(p=>{
-    const inL=inList.has(p.name);
-    return`<button class="sug-chip${inL?' in-list':''}" data-a="sug-chip" data-pid="${p.id}" title="${p.name}">
-      <span class="sug-chip-emoji">${p.emoji}</span>${p.name}${inL?'<span style="margin-left:4px;color:var(--success)">✓</span>':''}
-    </button>`;
-  }).join('');
+  const tabBar=`<div style="display:flex;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border)">
+    <button class="sh-stab" data-a="sh-view-tab" data-stab="pick" style="${shViewTab==='pick'?'background:var(--primary);color:#fff':'background:var(--bg);color:var(--text-secondary)'}">Выбрать</button>
+    <button class="sh-stab" data-a="sh-view-tab" data-stab="list" style="${shViewTab==='list'?'background:var(--primary);color:#fff':'background:var(--bg);color:var(--text-secondary)'}">Список${unc.length?` (${unc.length})`:''}</button>
+  </div>`;
 
-  const ckdHtml=ckd.length?`
-    <div class="ckd-header" data-a="toggle-ckd">
-      <span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Куплено (${ckd.length})</span>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="btn btn-sm" style="color:var(--rd);background:var(--rdl)" data-a="clear-ckd">Очистить</button>
-        <span class="ckd-toggle-icon${ckdExpanded?' open':''}">▼</span>
-      </div>
-    </div>
-    ${ckdExpanded?`<div class="shop-list">${ckd.map(rItem).join('')}</div>`:''}`:''
-
-  return`<div class="page-hdr">
-      <div><div class="page-title">Покупки</div><div class="page-subtitle">${sub}</div></div>
-    </div>
-    <div style="max-width:720px;padding-bottom:100px">
+  let content='';
+  if(shViewTab==='pick'){
+    const chips=sortedCatalog().map(p=>{
+      const inL=inList.has(p.name);
+      return`<button class="sug-chip${inL?' in-list':''}" data-a="sug-chip" data-pid="${p.id}" title="${p.name}">
+        <span class="sug-chip-emoji">${p.emoji}</span>${p.name}${inL?'<span style="margin-left:4px;color:var(--success)">✓</span>':''}
+      </button>`;
+    }).join('');
+    content=`
       <div class="sh-search-wrap">
         <input class="inp" id="sh-search" placeholder="🔍 Поиск или новый продукт…" autocomplete="off" value="${shSearchQ}" style="padding-right:40px">
         <div id="sh-drop" class="sh-search-drop" style="display:none"></div>
       </div>
       <div class="sug-grid" id="sug-grid">${chips}</div>
-      ${unc.length===0&&SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Выберите продукт выше или введите название</div></div>`:''}
+      ${hiddenProducts.size>0?`<div style="padding:4px 16px 16px"><button class="btn btn-sc btn-sm" data-a="restore-hidden">↩ Восстановить скрытые (${hiddenProducts.size})</button></div>`:''}`;
+  } else {
+    const ckdHtml=ckd.length?`
+      <div class="ckd-header" data-a="toggle-ckd">
+        <span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Куплено (${ckd.length})</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-sm" style="color:var(--rd);background:var(--rdl)" data-a="clear-ckd">Очистить</button>
+          <span class="ckd-toggle-icon${ckdExpanded?' open':''}">▼</span>
+        </div>
+      </div>
+      ${ckdExpanded?`<div class="shop-list">${ckd.map(rItem).join('')}</div>`:''}`:''
+    content=`
+      ${unc.length===0&&SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Перейдите во вкладку «Выбрать»</div></div>`:''}
       ${unc.length?`<div style="padding:0 16px 4px"><div class="shop-list">${unc.map(rItem).join('')}</div></div>`:''}
-      <div style="padding:0 16px">${ckdHtml}</div>
+      <div style="padding:0 16px">${ckdHtml}</div>`;
+  }
+
+  return`<div class="page-hdr">
+      <div><div class="page-title">Покупки</div><div class="page-subtitle">${sub}</div></div>
+    </div>
+    <div style="max-width:720px;padding-bottom:100px">
+      ${tabBar}
+      ${content}
     </div>`;
 }
 
@@ -921,10 +1012,48 @@ function saveSh(id,prod,qty,unit){
 
 function addNewCustomProduct(name){
   const id='cust_'+Date.now();
-  const newProd={id,name,emoji:'🛒',count:1};
+  const emoji=guessEmoji(name)||'🛒';
+  const newProd={id,name,emoji,count:1};
   PRODUCT_CATALOG.push(newProd);
-  db.ref('customProducts/'+id).set({name,emoji:'🛒',count:1});
+  db.ref('customProducts/'+id).set({name,emoji,count:1});
   openQtyModal(id);
+  if(!guessEmoji(name)&&ANTHROPIC_API_KEY){
+    newProd.emoji='⏳';
+    const chEl=document.querySelector(`.sug-chip[data-pid="${id}"] .sug-chip-emoji`);
+    if(chEl)chEl.textContent='⏳';
+    fetchEmojiFromClaude(name).then(em=>{
+      newProd.emoji=em;
+      db.ref('customProducts/'+id+'/emoji').set(em);
+      const ch=document.querySelector(`.sug-chip[data-pid="${id}"] .sug-chip-emoji`);
+      if(ch)ch.textContent=em;
+      const qe=document.querySelector('.qty-emoji');
+      if(qe&&document.querySelector('.qty-name')?.textContent===name)qe.textContent=em;
+    });
+  }
+}
+function showSugChipMenu(pid){
+  const prod=PRODUCT_CATALOG.find(p=>p.id===pid);if(!prod)return;
+  openModal(`<div class="modal-title">${prod.emoji} ${prod.name}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-pr btn-fw" id="scm-add">+ Добавить в список</button>
+      <button class="btn btn-sc btn-fw" id="scm-hide">🚫 Убрать из предложений</button>
+    </div>`,
+  ov=>{
+    ov.querySelector('#scm-add').addEventListener('click',()=>{closeModal();openQtyModal(pid)});
+    ov.querySelector('#scm-hide').addEventListener('click',()=>{closeModal();hideProduct(pid)});
+  });
+}
+function hideProduct(pid){
+  db.ref('hiddenProducts/'+pid).set(true);
+  hiddenProducts.add(pid);
+  if(tab==='shopping')renderTab('shopping');
+  toast('Товар скрыт');
+}
+function restoreHiddenProducts(){
+  db.ref('hiddenProducts').remove();
+  hiddenProducts.clear();
+  if(tab==='shopping')renderTab('shopping');
+  toast('✅ Скрытые товары восстановлены');
 }
 
 // ── WISHLIST ──
@@ -1357,12 +1486,14 @@ let lpTimer=null,lpFired=false;
 document.addEventListener('pointerdown',e=>{
   const catChip=e.target.closest('.chip[data-lp-cat]');
   const grpHdr=e.target.closest('.wl-group-hdr[data-lp-grp]');
-  if(!catChip&&!grpHdr)return;
+  const sugChip=e.target.closest('.sug-chip[data-pid]');
+  if(!catChip&&!grpHdr&&!sugChip)return;
   lpFired=false;
   lpTimer=setTimeout(()=>{
     lpFired=true;lpTimer=null;
     if(catChip)deleteNoteCategory(catChip.dataset.nf);
-    else deleteWlGroup(grpHdr.dataset.gk);
+    else if(grpHdr)deleteWlGroup(grpHdr.dataset.gk);
+    else if(sugChip)showSugChipMenu(sugChip.dataset.pid);
   },500);
 });
 document.addEventListener('pointerup',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}});
@@ -1383,8 +1514,10 @@ document.addEventListener('click',function(e){
   const a=btn.dataset.a,id=btn.dataset.id;
   switch(a){
     case 'close-mo':closeModal();break;
-    case 'sug-chip':openQtyModal(btn.dataset.pid);break;
+    case 'sug-chip':{if(lpFired){lpFired=false;break}openQtyModal(btn.dataset.pid);break}
     case 'sh-add-new':addNewCustomProduct(btn.dataset.name);break;
+    case 'sh-view-tab':shViewTab=btn.dataset.stab;renderTab('shopping');break;
+    case 'restore-hidden':restoreHiddenProducts();break;
     case 'toggle-ckd':ckdExpanded=!ckdExpanded;renderTab('shopping');break;
     case 'add-sh':openQtyModal(null,null);break;
     case 'edit-sh':openShModal(id);break;
