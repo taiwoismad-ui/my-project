@@ -201,22 +201,20 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.6;font-size:15px}
 .stab.on{color:var(--primary);border-bottom-color:var(--primary)}
 
 /* ── WISHLIST ── */
-.wish-item{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;transition:all var(--tr);box-shadow:var(--shadow-sm);border-left:3px solid transparent}
-.wish-item:hover{box-shadow:var(--shadow-md)}
-.wish-item.author-husband{border-left-color:var(--husband-color);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
-.wish-item.author-wife{border-left-color:var(--wife-color);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
-.pri-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.wish-t,.wish-title{flex:1;font-size:14px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary)}
-.wish-u,.wish-url{font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
-.wish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:14px 16px}
-@media(max-width:480px){.wish-grid{grid-template-columns:repeat(2,1fr)}}
-.wish-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-sm);transition:all .12s}
-.wish-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.wish-card-thumb,.wish-thumb{width:100%;height:110px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden}
-.wish-card-thumb img,.wish-thumb img{width:100%;height:100%;object-fit:cover}
-.wish-card-body{padding:10px 12px 12px;flex:1;display:flex;flex-direction:column;gap:5px}
-.wish-card-title{font-size:13px;font-weight:700;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text-primary)}
-.wish-card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+.wl-group-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;cursor:pointer;user-select:none}
+.wl-group-name{font-size:15px;font-weight:800;color:var(--text-primary)}
+.wl-group-meta{font-size:12px;color:var(--text-secondary);margin-left:8px;font-weight:600}
+.wl-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin:0 16px 10px;box-shadow:var(--shadow-sm)}
+.wl-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--tr);border-left:3px solid transparent}
+.wl-item:last-child{border-bottom:none}
+.wl-item:hover{background:#FAFBFC}
+.wl-item.wl-done{opacity:.5}
+.wl-item.author-husband{border-left-color:var(--husband-color)}
+.wl-item.author-wife{border-left-color:var(--wife-color)}
+.wl-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--s2)}
+.wl-thumb-fav{width:44px;height:44px;border-radius:8px;background:var(--s2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wl-detail-img{width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:16px}
+select.inp{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748B' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 
 /* ── CALENDAR ── */
 .cal-wrap{padding:0 16px 20px}
@@ -246,17 +244,13 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.6;font-size:15px}
 /* ── NOTES ── */
 .notes-filters{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
 .notes-filters::-webkit-scrollbar{display:none}
-.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;padding:16px}
-@media(max-width:600px){.notes-grid{grid-template-columns:1fr;gap:8px}}
-.note-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 16px;cursor:pointer;transition:all .12s;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow-sm)}
-.note-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.note-card.author-husband{border-left:3px solid var(--husband-color);border-radius:0 var(--radius-md) var(--radius-md) 0}
-.note-card.author-wife{border-left:3px solid var(--wife-color);border-radius:0 var(--radius-md) var(--radius-md) 0}
-.note-card-top,.note-top{display:flex;align-items:center;justify-content:space-between}
-.note-cat-tag,.note-cat{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
-.note-title{font-size:15px;font-weight:700;line-height:1.3;color:var(--text-primary)}
-.note-preview{font-size:13px;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-weight:400}
-.note-meta{font-size:11px;color:var(--text-secondary);font-weight:600;display:flex;align-items:center;gap:5px}
+.note-rows-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin:12px 16px;box-shadow:var(--shadow-sm)}
+.note-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--tr);border-left:3px solid transparent}
+.note-row:last-child{border-bottom:none}
+.note-row:hover{background:#FAFBFC}
+.note-row.author-husband{border-left-color:var(--husband-color)}
+.note-row.author-wife{border-left-color:var(--wife-color)}
+.note-row.note-done{opacity:.5}
 
 /* ── PROFILE ── */
 .prof-wrap{padding:0 16px 80px;max-width:580px}
@@ -336,15 +330,13 @@ const NCATS={
   talk:  {l:'О чём поговорить', i:'💬',c:'#34D399'},
   other: {l:'Другое',           i:'📄',c:'#6B7280'},
 };
-const WTABS=[
-  {id:'dima', l:'Дима',     ic:'👤'},
-  {id:'katya',l:'Катя',     ic:'👤'},
-  {id:'home', l:'Для дома', ic:'🏡'},
-  {id:'max',  l:'Для Макса',ic:'👶'},
-];
+const WGROUPS={dima:'Дима',katya:'Катя',home:'Для дома',max:'Для Макса',misc:'Разное'};
 const REC={none:'Без повтора',weekly:'Еженедельно',monthly:'Ежемесячно'};
-const PRI={want:'🔥 Очень хочу',some:'⭐ Когда-нибудь'};
-const PRI_C={want:'#F87171',some:'#FBBF24'};
+const PRI={high:'🔴 Высокий',medium:'🟡 Средний',low:'🟢 Низкий'};
+const PRI_C={high:'#EF4444',medium:'#F59E0B',low:'#10B981'};
+const PRI_IC={high:'🔴',medium:'🟡',low:'🟢'};
+const PRI_MAP={want:'high',some:'medium'}; // backward compat
+const normPri=p=>PRI_MAP[p]||p||'medium';
 const MO=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const DOW=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 
@@ -399,14 +391,14 @@ const PRODUCT_CATALOG = [
 
 // ── STATE ──
 let currentUser=localStorage.getItem('fp_who')||null;
-let SH=[],EV=[],NO=[];
-let WD={dima:[],katya:[],home:[],max:[]};
-let tab='shopping',wstab='dima',nfilt='all';
+let SH=[],EV=[],NO=[],WL=[];
+let tab='shopping',nfilt='all';
 let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel=null;
 let modalStack=[];
 let navBadges={shopping:0,wishlist:0,calendar:0,notes:0};
 let ckdExpanded=false;
 let shSearchQ='';
+let wlCollapsed={};
 
 // ── UTILS ──
 const today=()=>new Date().toISOString().slice(0,10);
@@ -457,6 +449,53 @@ function toast(msg){
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),2400);
 }
+function domainOf(url){try{return new URL(url).hostname.replace(/^www\./,'')}catch{return url}}
+function fmtPrice(n){if(!n)return'';return(+n).toLocaleString('ru-RU')+' ₽'}
+async function fetchMicrolink(url){
+  try{
+    const r=await fetch('https://api.microlink.io?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(5000)});
+    if(!r.ok)return null;
+    const j=await r.json();
+    return j.status==='success'?j.data:null;
+  }catch{return null}
+}
+function authorBadge(userId){
+  const isH=userId==='husband';
+  const initial=isH?'Д':'К';
+  const name=isH?'Дима':'Катя';
+  const bg=isH?'var(--husband-light)':'var(--wife-light)';
+  const clr=isH?'var(--husband-color)':'var(--wife-color)';
+  return`<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};color:${clr};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap">${initial} ${name}</span>`;
+}
+function urlFieldsHtml(urls){
+  const arr=urls&&urls.length?urls:[''];
+  return arr.map((u,i)=>`<div class="url-row" style="margin-bottom:8px"><input class="inp url-inp" type="url" placeholder="https://…" value="${u||''}">${i>0?`<button type="button" class="btn-ic rd url-rm" style="flex-shrink:0">×</button>`:`<span style="width:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center" id="ml-spinner"></span>`}</div>`).join('');
+}
+function attachUrlFieldEvents(ov,onFirstBlur){
+  ov.querySelector('#url-add-btn')?.addEventListener('click',()=>{
+    const f=ov.querySelector('#url-fields');
+    const row=document.createElement('div');
+    row.className='url-row';
+    row.style.marginBottom='8px';
+    row.innerHTML=`<input class="inp url-inp" type="url" placeholder="https://…"><button type="button" class="btn-ic rd url-rm" style="flex-shrink:0">×</button>`;
+    row.querySelector('.url-rm').addEventListener('click',()=>row.remove());
+    f.appendChild(row);
+  });
+  ov.querySelectorAll('.url-rm').forEach(b=>b.addEventListener('click',()=>b.closest('.url-row').remove()));
+  const firstInp=ov.querySelector('.url-inp');
+  if(firstInp&&onFirstBlur){
+    firstInp.addEventListener('blur',async()=>{
+      const url=firstInp.value.trim();
+      if(!url||!url.startsWith('http'))return;
+      const sp=ov.querySelector('#ml-spinner');
+      if(sp)sp.textContent='⏳';
+      const data=await fetchMicrolink(url);
+      if(sp)sp.textContent='';
+      if(data)onFirstBlur(data);
+    });
+  }
+}
+function getUrls(ov){return[...(ov.querySelectorAll('#url-fields .url-inp')||[])].map(i=>i.value.trim()).filter(Boolean)}
 
 // ── MODAL ──
 function openModal(html,cb){
@@ -572,15 +611,11 @@ async function loadAllData(){
     db.ref('customProducts').once('value'),
   ]);
   SH=snapToArr(s);
-  const aw=snapToArr(w);
-  WD={dima:[],katya:[],home:[],max:[]};
-  aw.forEach(it=>{if(WD[it.group]!==undefined)WD[it.group].push(it)});
+  WL=snapToArr(w);
   NO=snapToArr(n);
   EV=snapToArr(c);
-  // Merge Firebase counts into catalog
   const fbCounts=pc.val()||{};
   PRODUCT_CATALOG.forEach(p=>{if(fbCounts[p.id]!==undefined)p.count=fbCounts[p.id]});
-  // Load custom products
   if(cp.val()){
     Object.entries(cp.val()).forEach(([k,v])=>{
       if(!PRODUCT_CATALOG.find(p=>p.id===k))
@@ -606,9 +641,7 @@ function setupFirebaseListeners(){
     if(tab==='shopping')renderTab('shopping');
   });
   db.ref('wishlist').on('value',snap=>{
-    const aw=snapToArr(snap);
-    WD={dima:[],katya:[],home:[],max:[]};
-    aw.forEach(it=>{if(WD[it.group]!==undefined)WD[it.group].push(it)});
+    WL=snapToArr(snap);
     if(tab==='wishlist')renderTab('wishlist');
   });
   db.ref('notes').on('value',snap=>{
@@ -631,7 +664,7 @@ async function checkActivity(){
     SH.forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)ns++});
     NO.forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)nn++});
     EV.forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)nc++});
-    Object.values(WD).flat().forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)nw++});
+    WL.forEach(it=>{if((it.updatedAt||0)>lastSeen&&it.author!==currentUser)nw++});
     const total=ns+nn+nc+nw;
     if(total>0){
       navBadges={shopping:ns,wishlist:nw,calendar:nc,notes:nn};
@@ -845,92 +878,170 @@ function addNewCustomProduct(name){
 }
 
 // ── WISHLIST ──
-function rWishlist(){
-  const stabs=WTABS.map(t=>`<button class="stab ${wstab===t.id?'on':''}" data-ws="${t.id}">${t.ic} ${t.l}</button>`).join('');
-  const wt=WTABS.find(t=>t.id===wstab);
-  const items=WD[wstab]||[];
-  const isCard=wstab==='home'||wstab==='max';
-  const labels={dima:'личный список Димы',katya:'личный список Кати',home:'вещи для дома',max:'вещи для Макса'};
-  const sub=items.length===0?'Пусто':`${items.length} позиций`;
-  let body='';
-  if(items.length===0){
-    body=`<div class="empty"><div class="empty-ic">${wt.ic}</div><div class="empty-t">Список пуст</div><div class="empty-s">Добавьте ${labels[wstab]}</div></div>`;
-  }else if(isCard){
-    const cards=items.map(it=>{
-      const thumb=it.imageUrl?`<img src="${it.imageUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:`<div style="font-size:28px">${wt.ic}</div>`;
-      return`<div class="wish-card">
-        <div class="wish-card-thumb">${thumb}</div>
-        <div class="wish-card-body">
-          <div class="wish-card-title">${it.title}</div>
-          ${it.url?`<div style="font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${it.url.replace(/^https?:\/\//,'')}</div>`:''}
-          <div class="wish-card-foot">${priBadge(it.priority)}<button class="btn-ic rd" data-a="del-wl" data-id="${it.id}">🗑️</button></div>
-        </div></div>`;
-    }).join('');
-    body=`<div class="wish-grid">${cards}</div>`;
-  }else{
-    const rows=items.map(it=>`<div class="wish-item author-${it.author||''}">
-      <div class="pri-dot" style="background:${PRI_C[it.priority]||'#aaa'}"></div>
-      <div style="flex:1;min-width:0">
-        <div class="wish-title">${it.title}</div>
-        ${it.url?`<div class="wish-url">${it.url.replace(/^https?:\/\//,'')}</div>`:''}
+function rWlItem(it){
+  const urls=Array.isArray(it.urls)?it.urls:(it.url?[it.url]:[]);
+  const urlLinks=urls.filter(Boolean).map(u=>`<a href="${u}" target="_blank" style="color:var(--primary);font-size:12px;font-weight:600;text-decoration:none">${domainOf(u)}</a>`).join(', ');
+  const pri=normPri(it.priority);
+  const priIc=PRI_IC[pri]||'🟡';
+  const imgEl=it.imageUrl
+    ?`<img class="wl-thumb" src="${it.imageUrl}" onerror="this.outerHTML='<div class=wl-thumb-fav>❤️</div>'">`
+    :urls[0]?`<div class="wl-thumb-fav"><img src="https://www.google.com/s2/favicons?domain=${domainOf(urls[0])}&sz=64" style="width:28px;height:28px" onerror="this.style.display='none'"></div>`
+    :`<div class="wl-thumb-fav" style="font-size:20px">❤️</div>`;
+  return`<div class="wl-item${it.done?' wl-done':''} author-${it.author||''}" data-a="open-wl" data-id="${it.id}">
+    ${imgEl}
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);${it.done?'text-decoration:line-through;color:var(--text-secondary)':''};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.title}</div>
+      ${urlLinks?`<div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${urlLinks}</div>`:''}
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">
+        <span>${priIc}</span>
+        ${it.price?`<span style="font-size:12px;font-weight:700;color:var(--text-secondary)">${fmtPrice(+it.price)}</span>`:''}
+        ${it.author?authorBadge(it.author):''}
       </div>
-      ${priBadge(it.priority)}
-      <button class="btn-ic rd" data-a="del-wl" data-id="${it.id}">🗑️</button>
-    </div>`).join('');
-    body=`<div style="padding:14px 16px 100px">${rows}</div>`;
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+      <button class="btn-ic" data-a="edit-wl" data-id="${it.id}" style="font-size:13px">✏️</button>
+      <button class="btn-ic rd" data-a="del-wl" data-id="${it.id}" style="font-size:13px">🗑️</button>
+    </div>
+  </div>`;
+}
+
+function rWishlist(){
+  const grouped={};
+  WL.forEach(it=>{const g=it.group||'misc';if(!grouped[g])grouped[g]=[];grouped[g].push(it)});
+  const undoneAll=WL.filter(i=>!i.done);
+  const totalAll=undoneAll.reduce((s,i)=>s+(+i.price||0),0);
+  const sub=WL.length===0?'Список пуст':`${undoneAll.length} позиций${totalAll?` · ${fmtPrice(totalAll)}`:''}`;
+  let body='';
+  if(!WL.length){
+    body=`<div class="empty"><div class="empty-ic">❤️</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`;
+  } else {
+    Object.keys(WGROUPS).forEach(gk=>{
+      const items=grouped[gk];if(!items||!items.length)return;
+      const undone=items.filter(i=>!i.done);
+      const gTotal=undone.reduce((s,i)=>s+(+i.price||0),0);
+      const collapsed=wlCollapsed[gk];
+      body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="${gk}">
+        <div><span class="wl-group-name">${WGROUPS[gk]}</span><span class="wl-group-meta">${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}</span></div>
+        <span class="ckd-toggle-icon${collapsed?'':' open'}">▼</span>
+      </div>`;
+      if(!collapsed){
+        body+=`<div class="wl-section">${items.map(rWlItem).join('')}</div>`;
+      }
+    });
+    // misc group
+    const misc=grouped['misc'];
+    if(misc&&misc.length){
+      const undone=misc.filter(i=>!i.done);
+      const gTotal=undone.reduce((s,i)=>s+(+i.price||0),0);
+      const collapsed=wlCollapsed['misc'];
+      body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="misc">
+        <div><span class="wl-group-name">Разное</span><span class="wl-group-meta">${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}</span></div>
+        <span class="ckd-toggle-icon${collapsed?'':' open'}">▼</span>
+      </div>`;
+      if(!collapsed) body+=`<div class="wl-section">${misc.map(rWlItem).join('')}</div>`;
+    }
   }
   return`<div class="page-hdr">
       <div><div class="page-title">Вишлист</div><div class="page-subtitle">${sub}</div></div>
       <button class="btn-add" data-a="add-wl">+</button>
     </div>
-    <div class="subtabs">${stabs}</div>${body}`;
+    <div style="padding-bottom:100px">${body}</div>`;
 }
-function openWlModal(){
-  const isCard=wstab==='home'||wstab==='max';
-  const wt=WTABS.find(t=>t.id===wstab);
-  openModal(`<div class="modal-title">${wt.ic} ${wt.l}</div>
-    ${isCard?`<div class="url-row"><input class="inp" id="wl-url" placeholder="Ссылка (необязательно)" type="url"><button class="btn btn-sc" id="wl-fetch" style="flex-shrink:0">🔍</button></div>`:''}
-    <div class="fg"><label class="lbl">Название *</label><input class="inp" id="wl-title" placeholder="Что хотите?" maxlength="120"></div>
-    ${!isCard?`<div class="fg"><label class="lbl">Ссылка</label><input class="inp" id="wl-urlb" placeholder="https://…" type="url"></div>`:''}
-    ${isCard?`<div class="fg"><label class="lbl">Фото (URL)</label><input class="inp" id="wl-img" placeholder="https://…" type="url"></div>`:''}
-    <div class="fg"><label class="lbl">Приоритет</label>
-      <div class="chip-row"><button class="chip" data-pri="want">🔥 Очень хочу</button><button class="chip on" data-pri="some">⭐ Когда-нибудь</button></div>
+
+function openWlModal(id=null){
+  const it=id?WL.find(i=>i.id===id):null;
+  const urls=Array.isArray(it?.urls)?it.urls:(it?.url?[it.url]:[]);
+  const pri=normPri(it?.priority)||'medium';
+  const priCols={high:'#EF4444',medium:'#F59E0B',low:'#10B981'};
+  const priBtn=(k,lbl)=>`<button class="chip${pri===k?' on':''}" data-pri="${k}" style="${pri===k?`background:${priCols[k]};border-color:${priCols[k]};color:#fff`:''}">${lbl}</button>`;
+  const grpVal=it?.group||'home';
+  openModal(`<div class="modal-title">${it?'Редактировать':'Добавить в вишлист'}</div>
+    <div class="fg"><label class="lbl">Ссылки</label>
+      <div id="url-fields">${urlFieldsHtml(urls)}</div>
+      <button type="button" class="btn btn-sc btn-sm" id="url-add-btn" style="margin-bottom:4px">+ Добавить ссылку</button>
     </div>
+    <input type="hidden" id="wl-img" value="${it?.imageUrl||''}">
+    <div class="fg"><label class="lbl">Название *</label>
+      <input class="inp" id="wl-title" value="${it?.title||''}" placeholder="Что хотите?" maxlength="120"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="lbl">Стоимость, ₽</label>
+        <input class="inp" id="wl-price" type="number" min="0" placeholder="0" value="${it?.price||''}"></div>
+      <div class="fg"><label class="lbl">Группа</label>
+        <select class="inp" id="wl-group">
+          ${Object.entries(WGROUPS).map(([k,v])=>`<option value="${k}"${grpVal===k?' selected':''}>${v}</option>`).join('')}
+        </select></div>
+    </div>
+    <div class="fg"><label class="lbl">Приоритет</label>
+      <div class="chip-row">${priBtn('high','🔴 Высокий')}${priBtn('medium','🟡 Средний')}${priBtn('low','🟢 Низкий')}</div>
+    </div>
+    ${it?`<div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="wl-done"${it.done?' checked':''}><label for="wl-done" style="font-size:14px;font-weight:600;cursor:pointer">Куплено ✓</label></div>`:''}
     <div class="modal-acts">
+      ${id?`<button class="btn btn-rd" data-a="del-wl" data-id="${id}" style="flex:0;padding:9px 14px">🗑️</button>`:''}
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
-      <button class="btn btn-pr" data-a="save-wl">Добавить</button>
+      <button class="btn btn-pr" data-a="save-wl" data-id="${id||''}">${it?'Сохранить':'Добавить'}</button>
     </div>`,
   ov=>{
-    const fb=ov.querySelector('#wl-fetch');
-    if(fb)fb.addEventListener('click',async()=>{
-      const url=ov.querySelector('#wl-url')?.value.trim();
-      if(!url)return;fb.textContent='⏳';fb.disabled=true;
-      try{
-        const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(url),{signal:AbortSignal.timeout(7000)});
-        const d=await r.json();const h=d.contents||'';
-        const tit=(h.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)||h.match(/<title[^>]*>([^<]+)<\/title>/i))?.[1]?.trim();
-        const img=(h.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i))?.[1]?.trim();
-        if(tit){const ti=ov.querySelector('#wl-title');if(ti)ti.value=tit}
-        if(img){const ii=ov.querySelector('#wl-img');if(ii)ii.value=img}
-        toast(tit?'✅ Найдено':'⚠️ Заголовок не найден');
-      }catch{toast('⚠️ Не удалось загрузить')}
-      fb.textContent='🔍';fb.disabled=false;
+    attachUrlFieldEvents(ov,data=>{
+      const ti=ov.querySelector('#wl-title');
+      if(ti&&!ti.value&&data.title)ti.value=data.title;
+      if(data.image?.url){const hi=ov.querySelector('#wl-img');if(hi)hi.value=data.image.url}
+    });
+    ov.querySelectorAll('.chip[data-pri]').forEach(c=>{
+      c.addEventListener('click',()=>{
+        ov.querySelectorAll('.chip[data-pri]').forEach(x=>{x.classList.remove('on');x.style.background='';x.style.borderColor='';x.style.color=''});
+        const clr=priCols[c.dataset.pri]||'';
+        c.classList.add('on');if(clr){c.style.background=clr;c.style.borderColor=clr;c.style.color='#fff'}
+      });
     });
   });
 }
-function saveWl(){
-  const title=document.getElementById('wl-title')?.value.trim();
+
+function saveWl(id=null){
+  const ov=modalStack[modalStack.length-1];if(!ov)return;
+  const title=ov.querySelector('#wl-title')?.value.trim();
   if(!title){toast('Введите название');return}
-  const pri=document.querySelector('.chip[data-pri].on')?.dataset.pri||'some';
-  const url=(document.getElementById('wl-url')||document.getElementById('wl-urlb'))?.value.trim()||null;
-  const img=document.getElementById('wl-img')?.value.trim()||null;
+  const urls=getUrls(ov);
+  const price=parseFloat(ov.querySelector('#wl-price')?.value)||0;
+  const group=ov.querySelector('#wl-group')?.value||'misc';
+  const pri=ov.querySelector('.chip[data-pri].on')?.dataset.pri||'medium';
+  const imgUrl=ov.querySelector('#wl-img')?.value||null;
+  const done=ov.querySelector('#wl-done')?.checked||false;
   const now=Date.now();
-  db.ref('wishlist').push({title,url,imageUrl:img,priority:pri,group:wstab,author:currentUser,createdAt:now,updatedAt:now});
-  closeModal();toast('✅ Добавлено');
+  if(id){
+    db.ref('wishlist/'+id).update({title,urls,price,group,priority:pri,imageUrl:imgUrl||null,done,updatedAt:now});
+  }else{
+    db.ref('wishlist').push({title,urls,price,group,priority:pri,imageUrl:imgUrl||null,done:false,author:currentUser,createdAt:now,updatedAt:now});
+  }
+  closeModal();toast(id?'✅ Сохранено':'✅ Добавлено');
 }
+
 function delWl(id){
-  if(!confirm('Удалить?'))return;
+  if(!confirm('Удалить товар?'))return;
   db.ref('wishlist/'+id).remove();
+}
+
+function openWlDetail(id){
+  const it=WL.find(i=>i.id===id);if(!it)return;
+  const urls=Array.isArray(it.urls)?it.urls:(it.url?[it.url]:[]);
+  const pri=normPri(it.priority);
+  const imgHtml=it.imageUrl
+    ?`<img class="wl-detail-img" src="${it.imageUrl}" onerror="this.style.display='none'">`
+    :urls[0]?`<div style="width:100%;height:72px;background:var(--s2);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px"><img src="https://www.google.com/s2/favicons?domain=${domainOf(urls[0])}&sz=64" style="width:48px;height:48px"></div>`
+    :'';
+  openModal(`${imgHtml}
+    <div style="font-size:20px;font-weight:800;margin-bottom:10px;${it.done?'text-decoration:line-through;color:var(--text-secondary)':''}">${it.title}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
+      <span style="font-size:15px">${PRI_IC[pri]||'🟡'} ${PRI[pri]||''}</span>
+      ${it.price?`<span style="font-weight:700;color:var(--text-secondary)">${fmtPrice(+it.price)}</span>`:''}
+      ${it.group?`<span style="font-size:12px;color:var(--text-secondary)">${WGROUPS[it.group]||it.group}</span>`:''}
+      ${it.author?authorBadge(it.author):''}
+    </div>
+    ${urls.filter(Boolean).length?`<div style="margin-bottom:16px">${urls.filter(Boolean).map(u=>`<a href="${u}" target="_blank" style="display:flex;align-items:center;gap:6px;color:var(--primary);font-size:14px;font-weight:600;margin-bottom:6px;text-decoration:none">${domainOf(u)} <span style="font-size:11px">↗</span></a>`).join('')}</div>`:''}
+    <div class="modal-acts">
+      <button class="btn btn-rd" data-a="del-wl" data-id="${id}" style="flex:0;padding:9px 14px">🗑️</button>
+      <button class="btn ${it.done?'btn-sc':'btn-pr'}" data-a="toggle-wl-done" data-id="${id}" style="flex:1.5">${it.done?'↩ Не куплено':'Куплено ✓'}</button>
+      <button class="btn btn-sc" data-a="edit-wl" data-id="${id}">✏️</button>
+    </div>`);
 }
 
 // ── CALENDAR ──
@@ -1018,44 +1129,61 @@ function saveEv(){
 // ── NOTES ──
 function rNotes(){
   const filtered=nfilt==='all'?NO:NO.filter(n=>n.category===nfilt);
-  const sorted=[...filtered].sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-  const sub=NO.length===0?'Нет заметок':`${NO.length} заметок`;
+  const undone=filtered.filter(n=>!n.done).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const done=filtered.filter(n=>n.done).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const sorted=[...undone,...done];
+  const sub=filtered.length===0?'Нет заметок':`${filtered.length} заметок`;
   const filterChips=`<div class="notes-filters">
-    <button class="chip ${nfilt==='all'?'on':''}" data-nf="all">Все</button>
-    ${Object.entries(NCATS).map(([k,v])=>`<button class="chip ${nfilt===k?'on':''}" data-nf="${k}" style="${nfilt===k?`background:${v.c};border-color:${v.c}`:''}">${v.i} ${v.l}</button>`).join('')}
+    <button class="chip${nfilt==='all'?' on':''}" data-nf="all">Все</button>
+    ${Object.entries(NCATS).map(([k,v])=>`<button class="chip${nfilt===k?' on':''}" data-nf="${k}" style="${nfilt===k?`background:${v.c};border-color:${v.c};color:#fff`:''}">${v.i} ${v.l}</button>`).join('')}
   </div>`;
-  const cards=sorted.length?sorted.map(n=>{
+  const rows=sorted.length?sorted.map(n=>{
     const cat=NCATS[n.category]||NCATS.other;
-    return`<div class="note-card author-${n.author||''}" data-a="edit-note" data-id="${n.id}">
-      <div class="note-card-top">
-        <span class="note-cat-tag" style="background:${cat.c}20;color:${cat.c}">${cat.i} ${cat.l}</span>
-        <span style="font-size:11px;color:var(--text-secondary)">${timeAgo(n.updatedAt)}</span>
+    const urls=Array.isArray(n.urls)?n.urls:(n.url?[n.url]:[]);
+    const urlLinks=urls.filter(Boolean).map(u=>`<a href="${u}" target="_blank" style="color:var(--primary);font-size:12px;font-weight:600;text-decoration:none">${domainOf(u)}</a>`).join(', ');
+    return`<div class="note-row${n.done?' note-done':''} author-${n.author||''}" data-a="open-note" data-id="${n.id}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;${n.done?'text-decoration:line-through;color:var(--text-secondary)':'color:var(--text-primary)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.title}</div>
+        ${urlLinks?`<div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${urlLinks}</div>`:''}
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">
+          <span style="font-size:11px;background:${cat.c}20;color:${cat.c};border-radius:99px;padding:2px 8px;font-weight:700">${cat.i} ${cat.l}</span>
+          ${n.author?authorBadge(n.author):''}
+        </div>
       </div>
-      <div class="note-title">${n.title}</div>
-      ${n.content?`<div class="note-preview">${n.content}</div>`:''}
-      ${n.author?`<div class="note-meta">${userBadge(n.author)}</div>`:''}
+      <div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
+        <button class="btn-ic" data-a="edit-note" data-id="${n.id}" style="font-size:13px">✏️</button>
+        <button class="btn-ic rd" data-a="del-note" data-id="${n.id}" style="font-size:13px">🗑️</button>
+      </div>
     </div>`;
   }).join('')
-  :`<div class="empty" style="grid-column:1/-1"><div class="empty-ic">📝</div><div class="empty-t">Нет заметок</div><div class="empty-s">Нажмите + чтобы создать</div></div>`;
+  :`<div class="empty"><div class="empty-ic">📝</div><div class="empty-t">Нет заметок</div><div class="empty-s">Нажмите + чтобы создать</div></div>`;
   return`<div class="page-hdr">
       <div><div class="page-title">Заметки</div><div class="page-subtitle">${sub}</div></div>
       <button class="btn-add" data-a="add-note">+</button>
     </div>
     ${filterChips}
-    <div class="notes-grid">${cards}</div>`;
+    ${sorted.length?`<div class="note-rows-wrap">${rows}</div>`:rows}`;
 }
+
 function openNoteModal(id=null){
   const n=id?NO.find(x=>x.id===id):null;
+  const defaultCat=(nfilt&&nfilt!=='all')?nfilt:'other';
+  const curCat=n?.category||defaultCat;
+  const urls=Array.isArray(n?.urls)?n.urls:(n?.url?[n.url]:[]);
   openModal(`<div class="modal-title">${n?'Редактировать':'Новая заметка'}</div>
     <div class="fg"><label class="lbl">Категория</label>
       <div class="chip-row" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px">
-        ${Object.entries(NCATS).map(([k,v])=>`<button class="chip ${(!n&&k==='other')||(n&&n.category===k)?'on':''}" data-cat="${k}" style="${(!n&&k==='other')||(n&&n.category===k)?`background:${v.c};border-color:${v.c}`:''}">${v.i} ${v.l}</button>`).join('')}
+        ${Object.entries(NCATS).map(([k,v])=>`<button class="chip${curCat===k?' on':''}" data-cat="${k}" style="${curCat===k?`background:${v.c};border-color:${v.c};color:#fff`:''}">${v.i} ${v.l}</button>`).join('')}
       </div>
     </div>
     <div class="fg"><label class="lbl">Заголовок *</label>
-      <input class="inp" id="no-t" placeholder="Название" value="${n?n.title:''}" maxlength="100"></div>
+      <input class="inp" id="no-t" placeholder="Название" value="${n?.title||''}" maxlength="100"></div>
     <div class="fg"><label class="lbl">Содержимое</label>
-      <textarea class="inp" id="no-c" placeholder="Напишите здесь…" rows="6">${n?n.content||'':''}</textarea></div>
+      <textarea class="inp" id="no-c" placeholder="Напишите здесь…" rows="4">${n?.content||''}</textarea></div>
+    <div class="fg"><label class="lbl">Ссылки</label>
+      <div id="url-fields">${urlFieldsHtml(urls)}</div>
+      <button type="button" class="btn btn-sc btn-sm" id="url-add-btn" style="margin-bottom:4px">+ Ещё ссылка</button>
+    </div>
     <div class="modal-acts">
       ${id?`<button class="btn btn-rd" data-a="del-note" data-id="${id}" style="flex:0;padding:9px 14px">🗑️</button>`:''}
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
@@ -1064,22 +1192,47 @@ function openNoteModal(id=null){
   ov=>{
     ov.querySelectorAll('.chip[data-cat]').forEach(c=>{
       c.addEventListener('click',()=>{
-        ov.querySelectorAll('.chip[data-cat]').forEach(x=>{x.classList.remove('on');x.style.background='';x.style.borderColor=''});
+        ov.querySelectorAll('.chip[data-cat]').forEach(x=>{x.classList.remove('on');x.style.background='';x.style.borderColor='';x.style.color=''});
         const cat=NCATS[c.dataset.cat];
-        c.classList.add('on');if(cat){c.style.background=cat.c;c.style.borderColor=cat.c}
+        c.classList.add('on');if(cat){c.style.background=cat.c;c.style.borderColor=cat.c;c.style.color='#fff'}
       });
+    });
+    attachUrlFieldEvents(ov,data=>{
+      const ti=ov.querySelector('#no-t');
+      if(ti&&!ti.value&&data.title)ti.value=data.title;
     });
   });
 }
+
 function saveNote(id){
-  const title=document.getElementById('no-t')?.value.trim();
+  const ov=modalStack[modalStack.length-1];if(!ov)return;
+  const title=ov.querySelector('#no-t')?.value.trim();
   if(!title){toast('Введите заголовок');return}
-  const content=document.getElementById('no-c')?.value.trim()||'';
-  const cat=document.querySelector('.chip[data-cat].on')?.dataset.cat||'other';
+  const content=ov.querySelector('#no-c')?.value.trim()||'';
+  const cat=ov.querySelector('.chip[data-cat].on')?.dataset.cat||'other';
+  const urls=getUrls(ov);
   const now=Date.now();
-  if(id){db.ref('notes/'+id).update({title,content,category:cat,updatedAt:now})}
-  else{db.ref('notes').push({title,content,category:cat,author:currentUser,createdAt:now,updatedAt:now})}
+  if(id){db.ref('notes/'+id).update({title,content,category:cat,urls,updatedAt:now})}
+  else{db.ref('notes').push({title,content,category:cat,urls,done:false,author:currentUser,createdAt:now,updatedAt:now})}
   closeModal();toast('✅ Сохранено');
+}
+
+function openNoteDetail(id){
+  const n=NO.find(x=>x.id===id);if(!n)return;
+  const cat=NCATS[n.category]||NCATS.other;
+  const urls=Array.isArray(n.urls)?n.urls:(n.url?[n.url]:[]);
+  openModal(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:11px;background:${cat.c}20;color:${cat.c};border-radius:99px;padding:3px 10px;font-weight:700">${cat.i} ${cat.l}</span>
+      ${n.author?authorBadge(n.author):''}
+    </div>
+    <div style="font-size:19px;font-weight:800;margin-bottom:10px;${n.done?'text-decoration:line-through;color:var(--text-secondary)':''}">${n.title}</div>
+    ${n.content?`<div style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px;white-space:pre-wrap">${n.content}</div>`:''}
+    ${urls.filter(Boolean).length?`<div style="margin-bottom:14px">${urls.filter(Boolean).map(u=>`<a href="${u}" target="_blank" style="display:flex;align-items:center;gap:6px;color:var(--primary);font-size:14px;font-weight:600;margin-bottom:6px;text-decoration:none">${domainOf(u)} <span style="font-size:11px">↗</span></a>`).join('')}</div>`:''}
+    <div class="modal-acts">
+      <button class="btn btn-rd" data-a="del-note" data-id="${id}" style="flex:0;padding:9px 14px">🗑️</button>
+      <button class="btn ${n.done?'btn-sc':'btn-pr'}" data-a="toggle-note-done" data-id="${id}" style="flex:1.5">${n.done?'↩ Не готово':'✓ Готово'}</button>
+      <button class="btn btn-sc" data-a="edit-note" data-id="${id}">✏️</button>
+    </div>`);
 }
 
 // ── PROFILE ──
@@ -1098,7 +1251,7 @@ function rProfile(){
         </div></div>
       <div class="prof-card">
         <div class="prof-card-title">Статистика</div>
-        ${[['Покупок',SH.length],['Событий',EV.length],['Заметок',NO.length],['Вишлист (всего)',Object.values(WD).flat().length]]
+        ${[['Покупок',SH.length],['Событий',EV.length],['Заметок',NO.length],['Вишлист (всего)',WL.length]]
           .map(([l,v])=>`<div class="prof-row"><span class="prof-row-l">${l}</span><span class="prof-row-v">${v}</span></div>`).join('')}
       </div>
       <button class="btn btn-rd btn-fw" style="margin-top:4px" data-a="reset">⚠️ Сбросить все данные</button>
@@ -1109,16 +1262,12 @@ function rProfile(){
 document.addEventListener('click',function(e){
   const tb=e.target.closest('[data-tab]');
   if(tb){goTab(tb.dataset.tab);return}
-  const ws=e.target.closest('[data-ws]');
-  if(ws){wstab=ws.dataset.ws;renderTab('wishlist');return}
   const nf=e.target.closest('[data-nf]');
   if(nf){nfilt=nf.dataset.nf;renderTab('notes');return}
   const cd=e.target.closest('.cal-day[data-date]');
   if(cd){calSel=cd.dataset.date;renderTab('calendar');return}
   const rc=e.target.closest('.chip[data-rec]');
   if(rc){rc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));rc.classList.add('on');return}
-  const pc=e.target.closest('.chip[data-pri]');
-  if(pc){pc.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));pc.classList.add('on');return}
   const btn=e.target.closest('[data-a]');
   if(!btn)return;
   const a=btn.dataset.a,id=btn.dataset.id;
@@ -1142,8 +1291,16 @@ document.addEventListener('click',function(e){
         SH.filter(i=>i.done).forEach(i=>db.ref('purchases/'+i.id).remove());
       break;
     case 'add-wl':openWlModal();break;
-    case 'save-wl':saveWl();break;
+    case 'open-wl':if(!e.target.closest('a'))openWlDetail(id);break;
+    case 'edit-wl':closeModal();openWlModal(id);break;
+    case 'save-wl':saveWl(id||null);break;
     case 'del-wl':delWl(id);break;
+    case 'toggle-wlg':{const gk=btn.dataset.gk;wlCollapsed[gk]=!wlCollapsed[gk];renderTab('wishlist');break}
+    case 'toggle-wl-done':{
+      const it=WL.find(i=>i.id===id);
+      if(it){db.ref('wishlist/'+id).update({done:!it.done,updatedAt:Date.now()});closeModal();}
+      break;
+    }
     case 'cal-prev':if(calM===0){calM=11;calY--}else calM--;renderTab('calendar');break;
     case 'cal-next':if(calM===11){calM=0;calY++}else calM++;renderTab('calendar');break;
     case 'add-ev':openEvModal();break;
@@ -1151,10 +1308,16 @@ document.addEventListener('click',function(e){
     case 'del-ev':
       if(confirm('Удалить событие?'))db.ref('calendar/'+id).remove();break;
     case 'add-note':openNoteModal();break;
-    case 'edit-note':openNoteModal(id);break;
+    case 'open-note':if(!e.target.closest('a'))openNoteDetail(id);break;
+    case 'edit-note':closeModal();openNoteModal(id);break;
     case 'save-note':saveNote(id||null);break;
     case 'del-note':
       if(confirm('Удалить заметку?')){db.ref('notes/'+id).remove();closeModal();}break;
+    case 'toggle-note-done':{
+      const n=NO.find(i=>i.id===id);
+      if(n){db.ref('notes/'+id).update({done:!n.done,updatedAt:Date.now()});closeModal();}
+      break;
+    }
     case 'switch-u':
     case 'toggle-user':
       currentUser=currentUser==='husband'?'wife':'husband';
