@@ -320,17 +320,23 @@ const db = firebase.database();
 
 // ── CONFIG ──
 const USERS={
-  husband:{id:'husband',name:'Муж',color:'#4361EE'},
-  wife:   {id:'wife',   name:'Жена',color:'#EC4899'}
+  husband:{id:'husband',name:'Дима',color:'#4361EE'},
+  wife:   {id:'wife',   name:'Катя',color:'#EC4899'}
 };
-const NCATS={
-  food:  {l:'Что поесть',       i:'🍽️',c:'#F59E0B'},
-  watch: {l:'Что посмотреть',   i:'🎬',c:'#8B5CF6'},
-  places:{l:'Куда сходить',     i:'📍',c:'#60A5FA'},
-  talk:  {l:'О чём поговорить', i:'💬',c:'#34D399'},
-  other: {l:'Другое',           i:'📄',c:'#6B7280'},
-};
-const WGROUPS={dima:'Дима',katya:'Катя',home:'Для дома',max:'Для Макса',misc:'Разное'};
+const DEFAULT_NOTE_CATS=[
+  {id:'watch', label:'Что посмотреть', icon:'🎬', color:'#8B5CF6'},
+  {id:'food',  label:'Что поесть',     icon:'🍽️', color:'#F59E0B'},
+  {id:'ideas', label:'Идеи',           icon:'💡', color:'#60A5FA'},
+  {id:'other', label:'Другое',         icon:'📄', color:'#6B7280'},
+];
+const DEFAULT_NOTE_CAT_IDS=new Set(DEFAULT_NOTE_CATS.map(c=>c.id));
+const DEFAULT_WL_GROUPS=[
+  {id:'dima',  label:'Для Димы'},
+  {id:'katya', label:'Для Кати'},
+  {id:'max',   label:'Для Макса'},
+  {id:'misc',  label:'Разное'},
+];
+const DEFAULT_WL_GROUP_IDS=new Set(DEFAULT_WL_GROUPS.map(g=>g.id));
 const REC={none:'Без повтора',weekly:'Еженедельно',monthly:'Ежемесячно'};
 const PRI={high:'🔴 Высокий',medium:'🟡 Средний',low:'🟢 Низкий'};
 const PRI_C={high:'#EF4444',medium:'#F59E0B',low:'#10B981'};
@@ -391,7 +397,7 @@ const PRODUCT_CATALOG = [
 
 // ── STATE ──
 let currentUser=localStorage.getItem('fp_who')||null;
-let SH=[],EV=[],NO=[],WL=[];
+let SH=[],EV=[],NO=[],WL=[],NOTE_CATS=[],WL_GROUPS=[];
 let tab='shopping',nfilt='all';
 let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel=null;
 let modalStack=[];
@@ -408,7 +414,7 @@ function snapToArr(snap){
 }
 function av(userId,sz=34){
   const isH=userId==='husband';
-  const letter=isH?'М':'Ж';
+  const letter=isH?'Д':'К';
   const bg=isH?'var(--husband-light)':'var(--wife-light)';
   const clr=isH?'var(--husband-color)':'var(--wife-color)';
   const fs=Math.round(sz*.38);
@@ -417,8 +423,8 @@ function av(userId,sz=34){
 }
 function userBadge(userId){
   const isH=userId==='husband';
-  const letter=isH?'М':'Ж';
-  const name=isH?'Муж':'Жена';
+  const letter=isH?'Д':'К';
+  const name=isH?'Дима':'Катя';
   const bg=isH?'var(--husband-light)':'var(--wife-light)';
   const clr=isH?'var(--husband-color)':'var(--wife-color)';
   return`<span style="display:inline-flex;align-items:center;gap:4px;background:${bg};color:${clr};border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700">${letter} ${name}</span>`;
@@ -564,13 +570,12 @@ function showWhoModal(){
       <p style="font-size:14px;color:var(--text-secondary);margin-bottom:32px;line-height:1.5;font-weight:600">Выбери свой профиль</p>
       <div style="display:flex;gap:14px">
         <button data-who="husband" style="flex:1;padding:24px 16px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--f);box-shadow:var(--shadow-sm)">
-          <span style="width:52px;height:52px;background:var(--husband-light);border:2px solid var(--husband-color);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--husband-color)">М</span>
-          <span style="font-size:16px;font-weight:800;color:var(--text-primary)">Я</span>
-          <span style="font-size:12px;color:var(--text-secondary);font-weight:600">муж</span>
+          <span style="width:52px;height:52px;background:var(--husband-light);border:2px solid var(--husband-color);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--husband-color)">Д</span>
+          <span style="font-size:16px;font-weight:800;color:var(--text-primary)">Дима</span>
         </button>
         <button data-who="wife" style="flex:1;padding:24px 16px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--f);box-shadow:var(--shadow-sm)">
-          <span style="width:52px;height:52px;background:var(--wife-light);border:2px solid var(--wife-color);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--wife-color)">Ж</span>
-          <span style="font-size:16px;font-weight:800;color:var(--text-primary)">Жена</span>
+          <span style="width:52px;height:52px;background:var(--wife-light);border:2px solid var(--wife-color);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--wife-color)">К</span>
+          <span style="font-size:16px;font-weight:800;color:var(--text-primary)">Катя</span>
         </button>
       </div>
     </div>`;
@@ -601,14 +606,43 @@ async function startApp(){
   setupFirebaseListeners();
 }
 
+function buildNoteCats(val){
+  const cats=Object.entries(val).map(([id,v])=>({id,label:v.label||'',icon:v.icon||'📌',color:v.color||'#6B7280'}));
+  cats.sort((a,b)=>{
+    const ai=DEFAULT_NOTE_CATS.findIndex(d=>d.id===a.id);
+    const bi=DEFAULT_NOTE_CATS.findIndex(d=>d.id===b.id);
+    if(ai>=0&&bi>=0)return ai-bi;
+    if(ai>=0)return-1;if(bi>=0)return 1;return 0;
+  });
+  return cats;
+}
+function buildWlGroups(val){
+  const groups=Object.entries(val).map(([id,v])=>({id,label:v.label||id}));
+  groups.sort((a,b)=>{
+    const ai=DEFAULT_WL_GROUPS.findIndex(d=>d.id===a.id);
+    const bi=DEFAULT_WL_GROUPS.findIndex(d=>d.id===b.id);
+    if(ai>=0&&bi>=0)return ai-bi;
+    if(ai>=0)return-1;if(bi>=0)return 1;return 0;
+  });
+  return groups;
+}
+function noteCatById(id){
+  return NOTE_CATS.find(c=>c.id===id)||NOTE_CATS.find(c=>c.id==='other')||NOTE_CATS[0]||{id:'other',label:'Другое',icon:'📄',color:'#6B7280'};
+}
+function wlGroupLabelById(id){
+  return(WL_GROUPS.find(g=>g.id===id)||{label:id}).label;
+}
+
 async function loadAllData(){
-  const [s,w,n,c,pc,cp]=await Promise.all([
+  const [s,w,n,c,pc,cp,nc,wg]=await Promise.all([
     db.ref('purchases').once('value'),
     db.ref('wishlist').once('value'),
     db.ref('notes').once('value'),
     db.ref('calendar').once('value'),
     db.ref('productCounts').once('value'),
     db.ref('customProducts').once('value'),
+    db.ref('noteCategories').once('value'),
+    db.ref('wishlistGroups').once('value'),
   ]);
   SH=snapToArr(s);
   WL=snapToArr(w);
@@ -622,6 +656,14 @@ async function loadAllData(){
         PRODUCT_CATALOG.push({id:k,name:v.name,emoji:v.emoji||'🛒',count:v.count||1});
     });
   }
+  if(!nc.val()){
+    const upd={};DEFAULT_NOTE_CATS.forEach(c=>upd[c.id]={label:c.label,icon:c.icon,color:c.color});
+    await db.ref('noteCategories').set(upd);NOTE_CATS=[...DEFAULT_NOTE_CATS];
+  }else{NOTE_CATS=buildNoteCats(nc.val())}
+  if(!wg.val()){
+    const upd={};DEFAULT_WL_GROUPS.forEach(g=>upd[g.id]={label:g.label});
+    await db.ref('wishlistGroups').set(upd);WL_GROUPS=[...DEFAULT_WL_GROUPS];
+  }else{WL_GROUPS=buildWlGroups(wg.val())}
   renderTab(tab);
 }
 
@@ -651,6 +693,14 @@ function setupFirebaseListeners(){
   db.ref('calendar').on('value',snap=>{
     EV=snapToArr(snap);
     if(tab==='calendar')renderTab('calendar');
+  });
+  db.ref('noteCategories').on('value',snap=>{
+    if(snap.val())NOTE_CATS=buildNoteCats(snap.val());
+    if(tab==='notes')renderTab('notes');
+  });
+  db.ref('wishlistGroups').on('value',snap=>{
+    if(snap.val())WL_GROUPS=buildWlGroups(snap.val());
+    if(tab==='wishlist')renderTab('wishlist');
   });
 }
 
@@ -906,8 +956,9 @@ function rWlItem(it){
 }
 
 function rWishlist(){
+  const knownIds=new Set(WL_GROUPS.map(g=>g.id));
   const grouped={};
-  WL.forEach(it=>{const g=it.group||'misc';if(!grouped[g])grouped[g]=[];grouped[g].push(it)});
+  WL.forEach(it=>{const g=(it.group&&knownIds.has(it.group))?it.group:'misc';if(!grouped[g])grouped[g]=[];grouped[g].push(it)});
   const undoneAll=WL.filter(i=>!i.done);
   const totalAll=undoneAll.reduce((s,i)=>s+(+i.price||0),0);
   const sub=WL.length===0?'Список пуст':`${undoneAll.length} позиций${totalAll?` · ${fmtPrice(totalAll)}`:''}`;
@@ -915,35 +966,26 @@ function rWishlist(){
   if(!WL.length){
     body=`<div class="empty"><div class="empty-ic">❤️</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`;
   } else {
-    Object.keys(WGROUPS).forEach(gk=>{
-      const items=grouped[gk];if(!items||!items.length)return;
+    WL_GROUPS.forEach(grp=>{
+      const items=grouped[grp.id];if(!items||!items.length)return;
       const undone=items.filter(i=>!i.done);
       const gTotal=undone.reduce((s,i)=>s+(+i.price||0),0);
-      const collapsed=wlCollapsed[gk];
-      body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="${gk}">
-        <div><span class="wl-group-name">${WGROUPS[gk]}</span><span class="wl-group-meta">${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}</span></div>
+      const collapsed=wlCollapsed[grp.id];
+      body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="${grp.id}" data-lp-grp="1">
+        <div><span class="wl-group-name">${grp.label}</span><span class="wl-group-meta">${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}</span></div>
         <span class="ckd-toggle-icon${collapsed?'':' open'}">▼</span>
       </div>`;
       if(!collapsed){
         body+=`<div class="wl-section">${items.map(rWlItem).join('')}</div>`;
       }
     });
-    // misc group
-    const misc=grouped['misc'];
-    if(misc&&misc.length){
-      const undone=misc.filter(i=>!i.done);
-      const gTotal=undone.reduce((s,i)=>s+(+i.price||0),0);
-      const collapsed=wlCollapsed['misc'];
-      body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="misc">
-        <div><span class="wl-group-name">Разное</span><span class="wl-group-meta">${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}</span></div>
-        <span class="ckd-toggle-icon${collapsed?'':' open'}">▼</span>
-      </div>`;
-      if(!collapsed) body+=`<div class="wl-section">${misc.map(rWlItem).join('')}</div>`;
-    }
   }
   return`<div class="page-hdr">
       <div><div class="page-title">Вишлист</div><div class="page-subtitle">${sub}</div></div>
-      <button class="btn-add" data-a="add-wl">+</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-sc btn-sm" data-a="add-wl-group" style="white-space:nowrap">+ Группа</button>
+        <button class="btn-add" data-a="add-wl">+</button>
+      </div>
     </div>
     <div style="padding-bottom:100px">${body}</div>`;
 }
@@ -954,7 +996,7 @@ function openWlModal(id=null){
   const pri=normPri(it?.priority)||'medium';
   const priCols={high:'#EF4444',medium:'#F59E0B',low:'#10B981'};
   const priBtn=(k,lbl)=>`<button class="chip${pri===k?' on':''}" data-pri="${k}" style="${pri===k?`background:${priCols[k]};border-color:${priCols[k]};color:#fff`:''}">${lbl}</button>`;
-  const grpVal=it?.group||'home';
+  const grpVal=it?.group||(WL_GROUPS[0]?.id||'misc');
   openModal(`<div class="modal-title">${it?'Редактировать':'Добавить в вишлист'}</div>
     <div class="fg"><label class="lbl">Ссылки</label>
       <div id="url-fields">${urlFieldsHtml(urls)}</div>
@@ -968,7 +1010,7 @@ function openWlModal(id=null){
         <input class="inp" id="wl-price" type="number" min="0" placeholder="0" value="${it?.price||''}"></div>
       <div class="fg"><label class="lbl">Группа</label>
         <select class="inp" id="wl-group">
-          ${Object.entries(WGROUPS).map(([k,v])=>`<option value="${k}"${grpVal===k?' selected':''}>${v}</option>`).join('')}
+          ${WL_GROUPS.map(g=>`<option value="${g.id}"${grpVal===g.id?' selected':''}>${g.label}</option>`).join('')}
         </select></div>
     </div>
     <div class="fg"><label class="lbl">Приоритет</label>
@@ -1033,7 +1075,7 @@ function openWlDetail(id){
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
       <span style="font-size:15px">${PRI_IC[pri]||'🟡'} ${PRI[pri]||''}</span>
       ${it.price?`<span style="font-weight:700;color:var(--text-secondary)">${fmtPrice(+it.price)}</span>`:''}
-      ${it.group?`<span style="font-size:12px;color:var(--text-secondary)">${WGROUPS[it.group]||it.group}</span>`:''}
+      ${it.group?`<span style="font-size:12px;color:var(--text-secondary)">${wlGroupLabelById(it.group)}</span>`:''}
       ${it.author?authorBadge(it.author):''}
     </div>
     ${urls.filter(Boolean).length?`<div style="margin-bottom:16px">${urls.filter(Boolean).map(u=>`<a href="${u}" target="_blank" style="display:flex;align-items:center;gap:6px;color:var(--primary);font-size:14px;font-weight:600;margin-bottom:6px;text-decoration:none">${domainOf(u)} <span style="font-size:11px">↗</span></a>`).join('')}</div>`:''}
@@ -1133,12 +1175,15 @@ function rNotes(){
   const done=filtered.filter(n=>n.done).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
   const sorted=[...undone,...done];
   const sub=filtered.length===0?'Нет заметок':`${filtered.length} заметок`;
-  const filterChips=`<div class="notes-filters">
-    <button class="chip${nfilt==='all'?' on':''}" data-nf="all">Все</button>
-    ${Object.entries(NCATS).map(([k,v])=>`<button class="chip${nfilt===k?' on':''}" data-nf="${k}" style="${nfilt===k?`background:${v.c};border-color:${v.c};color:#fff`:''}">${v.i} ${v.l}</button>`).join('')}
+  const filterChips=`<div style="display:flex;align-items:center;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
+    <div class="notes-filters" style="border:none;flex:1">
+      <button class="chip${nfilt==='all'?' on':''}" data-nf="all">Все</button>
+      ${NOTE_CATS.map(c=>`<button class="chip${nfilt===c.id?' on':''}" data-nf="${c.id}" data-lp-cat="1" style="${nfilt===c.id?`background:${c.color};border-color:${c.color};color:#fff`:''}">${c.icon} ${c.label}</button>`).join('')}
+    </div>
+    <button class="btn btn-sc btn-sm" data-a="add-note-cat" style="flex-shrink:0;margin:0 10px">+</button>
   </div>`;
   const rows=sorted.length?sorted.map(n=>{
-    const cat=NCATS[n.category]||NCATS.other;
+    const cat=noteCatById(n.category);
     const urls=Array.isArray(n.urls)?n.urls:(n.url?[n.url]:[]);
     const urlLinks=urls.filter(Boolean).map(u=>`<a href="${u}" target="_blank" style="color:var(--primary);font-size:12px;font-weight:600;text-decoration:none">${domainOf(u)}</a>`).join(', ');
     return`<div class="note-row${n.done?' note-done':''} author-${n.author||''}" data-a="open-note" data-id="${n.id}">
@@ -1146,7 +1191,7 @@ function rNotes(){
         <div style="font-size:14px;font-weight:600;${n.done?'text-decoration:line-through;color:var(--text-secondary)':'color:var(--text-primary)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.title}</div>
         ${urlLinks?`<div style="margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${urlLinks}</div>`:''}
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap">
-          <span style="font-size:11px;background:${cat.c}20;color:${cat.c};border-radius:99px;padding:2px 8px;font-weight:700">${cat.i} ${cat.l}</span>
+          <span style="font-size:11px;background:${cat.color}20;color:${cat.color};border-radius:99px;padding:2px 8px;font-weight:700">${cat.icon} ${cat.label}</span>
           ${n.author?authorBadge(n.author):''}
         </div>
       </div>
@@ -1167,13 +1212,13 @@ function rNotes(){
 
 function openNoteModal(id=null){
   const n=id?NO.find(x=>x.id===id):null;
-  const defaultCat=(nfilt&&nfilt!=='all')?nfilt:'other';
+  const defaultCat=(nfilt&&nfilt!=='all'&&NOTE_CATS.find(c=>c.id===nfilt))?nfilt:(NOTE_CATS.find(c=>c.id==='other')?.id||NOTE_CATS[0]?.id||'other');
   const curCat=n?.category||defaultCat;
   const urls=Array.isArray(n?.urls)?n.urls:(n?.url?[n.url]:[]);
   openModal(`<div class="modal-title">${n?'Редактировать':'Новая заметка'}</div>
     <div class="fg"><label class="lbl">Категория</label>
       <div class="chip-row" style="overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px">
-        ${Object.entries(NCATS).map(([k,v])=>`<button class="chip${curCat===k?' on':''}" data-cat="${k}" style="${curCat===k?`background:${v.c};border-color:${v.c};color:#fff`:''}">${v.i} ${v.l}</button>`).join('')}
+        ${NOTE_CATS.map(c=>`<button class="chip${curCat===c.id?' on':''}" data-cat="${c.id}" style="${curCat===c.id?`background:${c.color};border-color:${c.color};color:#fff`:''}">${c.icon} ${c.label}</button>`).join('')}
       </div>
     </div>
     <div class="fg"><label class="lbl">Заголовок *</label>
@@ -1193,8 +1238,8 @@ function openNoteModal(id=null){
     ov.querySelectorAll('.chip[data-cat]').forEach(c=>{
       c.addEventListener('click',()=>{
         ov.querySelectorAll('.chip[data-cat]').forEach(x=>{x.classList.remove('on');x.style.background='';x.style.borderColor='';x.style.color=''});
-        const cat=NCATS[c.dataset.cat];
-        c.classList.add('on');if(cat){c.style.background=cat.c;c.style.borderColor=cat.c;c.style.color='#fff'}
+        const cat=noteCatById(c.dataset.cat);
+        c.classList.add('on');if(cat){c.style.background=cat.color;c.style.borderColor=cat.color;c.style.color='#fff'}
       });
     });
     attachUrlFieldEvents(ov,data=>{
@@ -1209,7 +1254,7 @@ function saveNote(id){
   const title=ov.querySelector('#no-t')?.value.trim();
   if(!title){toast('Введите заголовок');return}
   const content=ov.querySelector('#no-c')?.value.trim()||'';
-  const cat=ov.querySelector('.chip[data-cat].on')?.dataset.cat||'other';
+  const cat=ov.querySelector('.chip[data-cat].on')?.dataset.cat||NOTE_CATS[0]?.id||'other';
   const urls=getUrls(ov);
   const now=Date.now();
   if(id){db.ref('notes/'+id).update({title,content,category:cat,urls,updatedAt:now})}
@@ -1219,10 +1264,10 @@ function saveNote(id){
 
 function openNoteDetail(id){
   const n=NO.find(x=>x.id===id);if(!n)return;
-  const cat=NCATS[n.category]||NCATS.other;
+  const cat=noteCatById(n.category);
   const urls=Array.isArray(n.urls)?n.urls:(n.url?[n.url]:[]);
   openModal(`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <span style="font-size:11px;background:${cat.c}20;color:${cat.c};border-radius:99px;padding:3px 10px;font-weight:700">${cat.i} ${cat.l}</span>
+      <span style="font-size:11px;background:${cat.color}20;color:${cat.color};border-radius:99px;padding:3px 10px;font-weight:700">${cat.icon} ${cat.label}</span>
       ${n.author?authorBadge(n.author):''}
     </div>
     <div style="font-size:19px;font-weight:800;margin-bottom:10px;${n.done?'text-decoration:line-through;color:var(--text-secondary)':''}">${n.title}</div>
@@ -1258,12 +1303,77 @@ function rProfile(){
     </div>`;
 }
 
+// ── DYNAMIC CATEGORIES & GROUPS ──
+function openNewCatModal(){
+  const PALETTE=['#EF4444','#F97316','#EAB308','#22C55E','#06B6D4','#6366F1','#A855F7','#EC4899'];
+  const color=PALETTE[Math.floor(Math.random()*PALETTE.length)];
+  openModal(`<div class="modal-title">Новая категория</div>
+    <div class="fg"><label class="lbl">Название *</label>
+      <input class="inp" id="nc-label" placeholder="Например: Рестораны" maxlength="40"></div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-pr" id="nc-save">Создать</button>
+    </div>`,
+  ov=>{
+    ov.querySelector('#nc-save').addEventListener('click',()=>{
+      const label=ov.querySelector('#nc-label')?.value.trim();
+      if(!label){toast('Введите название');return}
+      db.ref('noteCategories').push({label,icon:'📌',color});
+      closeModal();toast('✅ Категория добавлена');
+    });
+  });
+}
+function deleteNoteCategory(id){
+  if(DEFAULT_NOTE_CAT_IDS.has(id)){toast('Нельзя удалить стандартную категорию');return}
+  if(!confirm('Удалить категорию?'))return;
+  db.ref('noteCategories/'+id).remove();
+  if(nfilt===id){nfilt='all';renderTab('notes')}
+}
+function openNewWlGroupModal(){
+  openModal(`<div class="modal-title">Новая группа</div>
+    <div class="fg"><label class="lbl">Название *</label>
+      <input class="inp" id="ng-label" placeholder="Например: Для путешествий" maxlength="40"></div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-pr" id="ng-save">Создать</button>
+    </div>`,
+  ov=>{
+    ov.querySelector('#ng-save').addEventListener('click',()=>{
+      const label=ov.querySelector('#ng-label')?.value.trim();
+      if(!label){toast('Введите название');return}
+      db.ref('wishlistGroups').push({label});
+      closeModal();toast('✅ Группа добавлена');
+    });
+  });
+}
+function deleteWlGroup(id){
+  if(DEFAULT_WL_GROUP_IDS.has(id)){toast('Нельзя удалить стандартную группу');return}
+  if(!confirm('Удалить группу?'))return;
+  db.ref('wishlistGroups/'+id).remove();
+}
+
+// ── LONG-PRESS ──
+let lpTimer=null,lpFired=false;
+document.addEventListener('pointerdown',e=>{
+  const catChip=e.target.closest('.chip[data-lp-cat]');
+  const grpHdr=e.target.closest('.wl-group-hdr[data-lp-grp]');
+  if(!catChip&&!grpHdr)return;
+  lpFired=false;
+  lpTimer=setTimeout(()=>{
+    lpFired=true;lpTimer=null;
+    if(catChip)deleteNoteCategory(catChip.dataset.nf);
+    else deleteWlGroup(grpHdr.dataset.gk);
+  },500);
+});
+document.addEventListener('pointerup',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}});
+document.addEventListener('pointercancel',()=>{if(lpTimer){clearTimeout(lpTimer);lpTimer=null}});
+
 // ── EVENT DELEGATION ──
 document.addEventListener('click',function(e){
   const tb=e.target.closest('[data-tab]');
   if(tb){goTab(tb.dataset.tab);return}
   const nf=e.target.closest('[data-nf]');
-  if(nf){nfilt=nf.dataset.nf;renderTab('notes');return}
+  if(nf){if(lpFired){lpFired=false;return}nfilt=nf.dataset.nf;renderTab('notes');return}
   const cd=e.target.closest('.cal-day[data-date]');
   if(cd){calSel=cd.dataset.date;renderTab('calendar');return}
   const rc=e.target.closest('.chip[data-rec]');
@@ -1295,7 +1405,7 @@ document.addEventListener('click',function(e){
     case 'edit-wl':closeModal();openWlModal(id);break;
     case 'save-wl':saveWl(id||null);break;
     case 'del-wl':delWl(id);break;
-    case 'toggle-wlg':{const gk=btn.dataset.gk;wlCollapsed[gk]=!wlCollapsed[gk];renderTab('wishlist');break}
+    case 'toggle-wlg':{if(lpFired){lpFired=false;break}const gk=btn.dataset.gk;wlCollapsed[gk]=!wlCollapsed[gk];renderTab('wishlist');break}
     case 'toggle-wl-done':{
       const it=WL.find(i=>i.id===id);
       if(it){db.ref('wishlist/'+id).update({done:!it.done,updatedAt:Date.now()});closeModal();}
@@ -1307,6 +1417,8 @@ document.addEventListener('click',function(e){
     case 'save-ev':saveEv();break;
     case 'del-ev':
       if(confirm('Удалить событие?'))db.ref('calendar/'+id).remove();break;
+    case 'add-note-cat':openNewCatModal();break;
+    case 'add-wl-group':openNewWlGroupModal();break;
     case 'add-note':openNoteModal();break;
     case 'open-note':if(!e.target.closest('a'))openNoteDetail(id);break;
     case 'edit-note':closeModal();openNoteModal(id);break;
