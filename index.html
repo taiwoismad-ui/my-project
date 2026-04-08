@@ -152,13 +152,46 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.6;font-size:15px}
 .shop-item.checked{opacity:.5}
 .shop-item.author-husband{border-left-color:var(--husband-color)}
 .shop-item.author-wife{border-left-color:var(--wife-color)}
-.checkbox{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;font-size:12px;color:transparent;background:transparent}
+.shop-emoji{font-size:32px;line-height:1;flex-shrink:0;width:40px;text-align:center}
+.checkbox{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;font-size:18px;color:transparent;background:transparent}
 .checkbox.on{background:var(--success);border-color:var(--success);color:#fff}
-.shop-name{flex:1;font-size:15px;font-weight:700;color:var(--text-primary);transition:all var(--tr)}
+.shop-name{font-size:15px;font-weight:700;color:var(--text-primary);transition:all var(--tr)}
+.shop-qty{font-size:13px;color:var(--text-secondary);font-weight:600;margin-top:1px}
 .shop-item.checked .shop-name{text-decoration:line-through;color:var(--text-secondary)}
 .item-acts{display:flex;align-items:center;gap:2px;opacity:0;transition:opacity var(--tr)}
 .shop-item:hover .item-acts{opacity:1}
 @media(hover:none){.item-acts{opacity:1}}
+
+/* ── SUGGESTIONS GRID ── */
+.sug-grid{display:flex;flex-wrap:wrap;gap:7px;padding:14px 16px 10px}
+.sug-chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--f);transition:all .12s;color:var(--text-primary);position:relative}
+.sug-chip:active{transform:scale(.95)}
+.sug-chip.in-list{background:rgba(16,185,129,.08);border-color:var(--success)}
+.sug-chip-emoji{font-size:20px;line-height:1}
+
+/* ── SEARCH DROPDOWN ── */
+.sh-search-wrap{padding:0 16px 8px;position:relative}
+.sh-search-drop{position:absolute;left:16px;right:16px;top:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow-md);z-index:50;overflow:hidden;max-height:220px;overflow-y:auto}
+.sh-drop-item{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;font-size:14px;font-weight:600;transition:background .1s}
+.sh-drop-item:hover{background:var(--s2)}
+.sh-drop-new{color:var(--primary)}
+
+/* ── QUANTITY MODAL ── */
+.qty-title{text-align:center;margin-bottom:24px}
+.qty-emoji{font-size:44px;line-height:1;display:block;margin-bottom:8px}
+.qty-name{font-size:20px;font-weight:800;color:var(--text-primary)}
+.qty-row{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px}
+.qty-btn{width:52px;height:52px;border-radius:50%;background:var(--s2);border:1.5px solid var(--border);font-size:24px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--f);transition:all .12s;flex-shrink:0}
+.qty-btn:active{transform:scale(.9)}
+.qty-val{width:64px;text-align:center;font-size:28px;font-weight:800;color:var(--text-primary)}
+.unit-row{display:flex;justify-content:center;gap:8px;margin-bottom:24px}
+.unit-btn{padding:8px 24px;border-radius:10px;border:1.5px solid var(--border);background:var(--s2);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--f);transition:all .12s;color:var(--text-secondary)}
+.unit-btn.on{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* ── CHECKED COLLAPSE ── */
+.ckd-header{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px;cursor:pointer;user-select:none}
+.ckd-toggle-icon{font-size:12px;transition:transform .2s;color:var(--text-secondary)}
+.ckd-toggle-icon.open{transform:rotate(180deg)}
 
 /* ── SUBTABS ── */
 .subtabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
@@ -323,6 +356,47 @@ const ICONS={
   profile:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
 };
 
+// ── PRODUCT CATALOG ──
+const PRODUCT_CATALOG = [
+  { id: 'bread',     name: 'Хлеб',                emoji: '🍞', count: 9 },
+  { id: 'milk',      name: 'Безлактозное молоко', emoji: '🥛', count: 8 },
+  { id: 'cat1',      name: 'Брату',               emoji: '🐱', count: 7 },
+  { id: 'eggs',      name: 'Яйца',                emoji: '🥚', count: 6 },
+  { id: 'wine',      name: 'Вино',                emoji: '🍷', count: 6 },
+  { id: 'cat2',      name: 'Мелкой',              emoji: '🐱', count: 6 },
+  { id: 'potato',    name: 'Картошка',            emoji: '🥔', count: 6 },
+  { id: 'tea',       name: 'К чаю',               emoji: '🍪', count: 6 },
+  { id: 'water_kid', name: 'Воды мелкому',        emoji: '💧', count: 5 },
+  { id: 'onion',     name: 'Лук',                 emoji: '🧅', count: 5 },
+  { id: 'carrot',    name: 'Морква',              emoji: '🥕', count: 5 },
+  { id: 'beer',      name: 'Пиво',                emoji: '🍺', count: 5 },
+  { id: 'butter',    name: 'Масло сливочное',     emoji: '🧈', count: 5 },
+  { id: 'lemon',     name: 'Лимон',               emoji: '🍋', count: 5 },
+  { id: 'toast',     name: 'Хлеб тостовый',       emoji: '🍞', count: 5 },
+  { id: 'noodles',   name: 'БПшки',               emoji: '🍜', count: 4 },
+  { id: 'oil',       name: 'Масло подсолнечное',  emoji: '🫙', count: 4 },
+  { id: 'sticks',    name: 'Стики',               emoji: '🚬', count: 4 },
+  { id: 'cigs',      name: 'Сигареты',            emoji: '🚬', count: 4 },
+  { id: 'juice',     name: 'Сок апельсиновый',    emoji: '🍊', count: 4 },
+  { id: 'nuts',      name: 'Орешки',              emoji: '🥜', count: 4 },
+  { id: 'crackers',  name: 'Сухарики',            emoji: '🧂', count: 4 },
+  { id: 'water_max', name: 'Воды максу',          emoji: '💧', count: 4 },
+  { id: 'banana',    name: 'Банан',               emoji: '🍌', count: 4 },
+  { id: 'apple',     name: 'Яблоки',              emoji: '🍎', count: 4 },
+  { id: 'caviar',    name: 'Икра',                emoji: '🫙', count: 3 },
+  { id: 'dill',      name: 'Укроп',               emoji: '🌿', count: 3 },
+  { id: 'parsley',   name: 'Петрушка',            emoji: '🌿', count: 3 },
+  { id: 'cake',      name: 'Торт',                emoji: '🎂', count: 3 },
+  { id: 'corona',    name: 'Корона',              emoji: '🍺', count: 3 },
+  { id: 'lime',      name: 'Лайм',                emoji: '🍋', count: 3 },
+  { id: 'reds',      name: 'Редс',                emoji: '🍺', count: 3 },
+  { id: 'ketchup',   name: 'Кетчуп',             emoji: '🍅', count: 3 },
+  { id: 'mayo',      name: 'Мазик',               emoji: '🫙', count: 3 },
+  { id: 'sausage',   name: 'Колбаска к супу',     emoji: '🌭', count: 3 },
+  { id: 'pear',      name: 'Груши',               emoji: '🍐', count: 3 },
+  { id: 'prunes',    name: 'Чернослив фрутоняня', emoji: '🫐', count: 2 },
+];
+
 // ── STATE ──
 let currentUser=localStorage.getItem('fp_who')||null;
 let SH=[],EV=[],NO=[];
@@ -331,6 +405,8 @@ let tab='shopping',wstab='dima',nfilt='all';
 let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel=null;
 let modalStack=[];
 let navBadges={shopping:0,wishlist:0,calendar:0,notes:0};
+let ckdExpanded=false;
+let shSearchQ='';
 
 // ── UTILS ──
 const today=()=>new Date().toISOString().slice(0,10);
@@ -406,7 +482,10 @@ function goTab(t){
 function renderTab(t){
   const fn={shopping:rShopping,wishlist:rWishlist,calendar:rCalendar,notes:rNotes,profile:rProfile};
   const el=document.getElementById('tp-'+t);
-  if(el&&fn[t])el.innerHTML=fn[t]();
+  if(el&&fn[t]){
+    el.innerHTML=fn[t]();
+    if(t==='shopping')attachShSearch();
+  }
 }
 function renderNav(){
   const TABS=[
@@ -484,11 +563,13 @@ async function startApp(){
 }
 
 async function loadAllData(){
-  const [s,w,n,c]=await Promise.all([
+  const [s,w,n,c,pc,cp]=await Promise.all([
     db.ref('purchases').once('value'),
     db.ref('wishlist').once('value'),
     db.ref('notes').once('value'),
     db.ref('calendar').once('value'),
+    db.ref('productCounts').once('value'),
+    db.ref('customProducts').once('value'),
   ]);
   SH=snapToArr(s);
   const aw=snapToArr(w);
@@ -496,6 +577,16 @@ async function loadAllData(){
   aw.forEach(it=>{if(WD[it.group]!==undefined)WD[it.group].push(it)});
   NO=snapToArr(n);
   EV=snapToArr(c);
+  // Merge Firebase counts into catalog
+  const fbCounts=pc.val()||{};
+  PRODUCT_CATALOG.forEach(p=>{if(fbCounts[p.id]!==undefined)p.count=fbCounts[p.id]});
+  // Load custom products
+  if(cp.val()){
+    Object.entries(cp.val()).forEach(([k,v])=>{
+      if(!PRODUCT_CATALOG.find(p=>p.id===k))
+        PRODUCT_CATALOG.push({id:k,name:v.name,emoji:v.emoji||'🛒',count:v.count||1});
+    });
+  }
   renderTab(tab);
 }
 
@@ -580,58 +671,177 @@ function highlightNewItems(){
 }
 
 // ── SHOPPING ──
+function sortedCatalog(){
+  return [...PRODUCT_CATALOG].sort((a,b)=>b.count-a.count);
+}
+function activeShNames(){
+  return new Set(SH.filter(i=>!i.done).map(i=>i.name));
+}
+
 function rShopping(){
   const unc=SH.filter(i=>!i.done),ckd=SH.filter(i=>i.done);
   const sub=SH.length===0?'Список пуст':unc.length===0?'Всё куплено ✓':`${unc.length} позиций`;
+  const inList=activeShNames();
+
   const rItem=it=>{
-    const recBadge=it.recurrence&&it.recurrence!=='none'?`<span class="badge" style="background:var(--acl);color:var(--ac);font-size:10px">🔁 ${it.recurrence==='weekly'?'Еженед.':'Ежемес.'}</span>`:'';
+    const prod=PRODUCT_CATALOG.find(p=>p.name===it.name);
+    const emoji=it.emoji||(prod?prod.emoji:'🛒');
+    const qty=it.qty&&it.qty>1?`${it.qty} ${it.unit||'шт'}`:'';
     return`<div class="shop-item ${it.done?'checked':''} author-${it.author||''}" data-id="${it.id}">
-      <button class="checkbox ${it.done?'on':''}" data-a="toggle-sh" data-id="${it.id}">${it.done?'✓':''}</button>
+      <div class="shop-emoji">${emoji}</div>
       <div style="flex:1;min-width:0">
         <div class="shop-name">${it.name||''}</div>
-        ${recBadge||it.author?`<div style="display:flex;align-items:center;gap:5px;margin-top:3px">${recBadge}${it.author?userBadge(it.author):''}</div>`:''}
+        ${qty?`<div class="shop-qty">${qty}</div>`:''}
+        ${it.author?`<div style="margin-top:2px">${userBadge(it.author)}</div>`:''}
       </div>
-      <div class="item-acts">
-        <button class="btn-ic" data-a="edit-sh" data-id="${it.id}">✏️</button>
-        <button class="btn-ic rd" data-a="del-sh" data-id="${it.id}">🗑️</button>
-      </div>
+      <button class="checkbox ${it.done?'on':''}" data-a="toggle-sh" data-id="${it.id}">${it.done?'✓':''}</button>
     </div>`;
   };
+
+  const chips=sortedCatalog().map(p=>{
+    const inL=inList.has(p.name);
+    return`<button class="sug-chip${inL?' in-list':''}" data-a="sug-chip" data-pid="${p.id}" title="${p.name}">
+      <span class="sug-chip-emoji">${p.emoji}</span>${p.name}${inL?'<span style="margin-left:4px;color:var(--success)">✓</span>':''}
+    </button>`;
+  }).join('');
+
+  const ckdHtml=ckd.length?`
+    <div class="ckd-header" data-a="toggle-ckd">
+      <span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Куплено (${ckd.length})</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-sm" style="color:var(--rd);background:var(--rdl)" data-a="clear-ckd">Очистить</button>
+        <span class="ckd-toggle-icon${ckdExpanded?' open':''}">▼</span>
+      </div>
+    </div>
+    ${ckdExpanded?`<div class="shop-list">${ckd.map(rItem).join('')}</div>`:''}`:''
+
   return`<div class="page-hdr">
       <div><div class="page-title">Покупки</div><div class="page-subtitle">${sub}</div></div>
-      <button class="btn-add" data-a="add-sh">+</button>
     </div>
-    <div style="padding:0 16px 100px;max-width:720px">
-    ${SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`:''}
-    ${unc.length?`<div class="shop-list">${unc.map(rItem).join('')}</div>`:''}
-    ${ckd.length?`<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 2px 6px">
-        <span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Куплено (${ckd.length})</span>
-        <button class="btn btn-sm" style="color:var(--rd);background:var(--rdl)" data-a="clear-ckd">Очистить</button>
+    <div style="max-width:720px;padding-bottom:100px">
+      <div class="sh-search-wrap">
+        <input class="inp" id="sh-search" placeholder="🔍 Поиск или новый продукт…" autocomplete="off" value="${shSearchQ}" style="padding-right:40px">
+        <div id="sh-drop" class="sh-search-drop" style="display:none"></div>
       </div>
-      <div class="shop-list">${ckd.map(rItem).join('')}</div>`:''}
+      <div class="sug-grid" id="sug-grid">${chips}</div>
+      ${unc.length===0&&SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Выберите продукт выше или введите название</div></div>`:''}
+      ${unc.length?`<div style="padding:0 16px 4px"><div class="shop-list">${unc.map(rItem).join('')}</div></div>`:''}
+      <div style="padding:0 16px">${ckdHtml}</div>
     </div>`;
 }
-function openShModal(id=null){
-  const it=id?SH.find(i=>i.id===id):null;
-  openModal(`<div class="modal-title">${it?'Изменить':'Добавить покупку'}</div>
-    <div class="fg"><label class="lbl">Название</label>
-      <input class="inp" id="sh-n" placeholder="Молоко, хлеб…" value="${it?it.name||'':''}" maxlength="80"></div>
-    <div class="fg"><label class="lbl">Повторение</label>
-      <div class="chip-row">${Object.entries(REC).map(([k,v])=>`<button class="chip ${(!it&&k==='none')||(it&&it.recurrence===k)?'on':''}" data-rec="${k}">${v}</button>`).join('')}</div>
+
+function attachShSearch(){
+  const inp=document.getElementById('sh-search');
+  const drop=document.getElementById('sh-drop');
+  if(!inp)return;
+  inp.addEventListener('input',function(){
+    shSearchQ=this.value.trim();
+    renderShDrop(shSearchQ,drop);
+  });
+  inp.addEventListener('focus',function(){
+    if(shSearchQ)renderShDrop(shSearchQ,drop);
+  });
+  document.addEventListener('click',function outsideClick(e){
+    if(!inp.contains(e.target)&&!drop.contains(e.target)){
+      drop.style.display='none';
+      document.removeEventListener('click',outsideClick);
+    }
+  });
+  if(shSearchQ)renderShDrop(shSearchQ,drop);
+}
+
+function renderShDrop(q,drop){
+  if(!q){drop.style.display='none';return}
+  const ql=q.toLowerCase();
+  const matches=PRODUCT_CATALOG.filter(p=>p.name.toLowerCase().includes(ql)).slice(0,8);
+  const exactMatch=PRODUCT_CATALOG.find(p=>p.name.toLowerCase()===ql);
+  let html=matches.map(p=>`<div class="sh-drop-item" data-a="sug-chip" data-pid="${p.id}"><span style="font-size:20px">${p.emoji}</span>${p.name}</div>`).join('');
+  if(!exactMatch) html+=`<div class="sh-drop-item sh-drop-new" data-a="sh-add-new" data-name="${q}">+ Добавить «${q}» как новый продукт</div>`;
+  drop.innerHTML=html;
+  drop.style.display=matches.length||!exactMatch?'block':'none';
+}
+
+function openQtyModal(prodId,customName){
+  let prod=PRODUCT_CATALOG.find(p=>p.id===prodId);
+  if(!prod&&customName)prod={id:'_custom',name:customName,emoji:'🛒',count:1};
+  if(!prod)return;
+  let qty=1,unit='шт';
+  const render=()=>{
+    document.getElementById('qty-val').textContent=qty;
+    document.querySelectorAll('.unit-btn').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
+  };
+  openModal(`<div class="qty-title">
+      <span class="qty-emoji">${prod.emoji}</span>
+      <span class="qty-name">${prod.name}</span>
+    </div>
+    <div class="qty-row">
+      <button class="qty-btn" id="qty-minus">−</button>
+      <span class="qty-val" id="qty-val">1</span>
+      <button class="qty-btn" id="qty-plus">+</button>
+    </div>
+    <div class="unit-row">
+      <button class="unit-btn on" data-unit="шт">шт</button>
+      <button class="unit-btn" data-unit="кг">кг</button>
     </div>
     <div class="modal-acts">
       <button class="btn btn-sc" data-a="close-mo">Отмена</button>
-      <button class="btn btn-pr" data-a="save-sh" data-id="${id||''}">${it?'Сохранить':'Добавить'}</button>
+      <button class="btn btn-pr" id="qty-add-btn" style="flex:2">Добавить в список</button>
+    </div>`,
+    ov=>{
+      ov.querySelector('#qty-minus').addEventListener('click',()=>{if(qty>1)qty--;render()});
+      ov.querySelector('#qty-plus').addEventListener('click',()=>{qty++;render()});
+      ov.querySelectorAll('.unit-btn').forEach(b=>b.addEventListener('click',()=>{unit=b.dataset.unit;render()}));
+      ov.querySelector('#qty-add-btn').addEventListener('click',()=>saveSh(null,prod,qty,unit));
+    }
+  );
+}
+
+function openShModal(id=null){
+  // Edit existing item (simple name edit)
+  const it=id?SH.find(i=>i.id===id):null;
+  if(!it){openQtyModal(null,null);return}
+  openModal(`<div class="modal-title">Изменить</div>
+    <div class="fg"><label class="lbl">Название</label>
+      <input class="inp" id="sh-n" value="${it.name||''}" maxlength="80"></div>
+    <div class="fg"><label class="lbl">Количество</label>
+      <input class="inp" id="sh-qty" type="number" min="1" value="${it.qty||1}" style="width:80px"></div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-pr" data-a="save-sh" data-id="${id}">Сохранить</button>
     </div>`);
 }
-function saveSh(id){
-  const name=document.getElementById('sh-n')?.value.trim();
-  if(!name){toast('Введите название');return}
-  const rec=document.querySelector('.chip[data-rec].on')?.dataset.rec||'none';
+
+function saveSh(id,prod,qty,unit){
   const now=Date.now();
-  if(id){db.ref('purchases/'+id).update({name,recurrence:rec,updatedAt:now})}
-  else{db.ref('purchases').push({name,done:false,recurrence:rec,lastRec:today(),author:currentUser,createdAt:now,updatedAt:now})}
+  if(id){
+    // Edit mode
+    const name=document.getElementById('sh-n')?.value.trim();
+    const q=parseInt(document.getElementById('sh-qty')?.value)||1;
+    if(!name){toast('Введите название');return}
+    db.ref('purchases/'+id).update({name,qty:q,updatedAt:now});
+  } else {
+    // Add from qty modal
+    if(!prod){toast('Выберите продукт');return}
+    db.ref('purchases').push({
+      name:prod.name,emoji:prod.emoji,qty:qty||1,unit:unit||'шт',
+      done:false,author:currentUser,createdAt:now,updatedAt:now
+    });
+    // Increment count
+    const ref=db.ref('productCounts/'+prod.id);
+    ref.transaction(cur=>(cur||prod.count||1)+1);
+    const p=PRODUCT_CATALOG.find(p=>p.id===prod.id);
+    if(p)p.count++;
+    shSearchQ='';
+  }
   closeModal();
+}
+
+function addNewCustomProduct(name){
+  const id='cust_'+Date.now();
+  const newProd={id,name,emoji:'🛒',count:1};
+  PRODUCT_CATALOG.push(newProd);
+  db.ref('customProducts/'+id).set({name,emoji:'🛒',count:1});
+  openQtyModal(id);
 }
 
 // ── WISHLIST ──
@@ -914,7 +1124,10 @@ document.addEventListener('click',function(e){
   const a=btn.dataset.a,id=btn.dataset.id;
   switch(a){
     case 'close-mo':closeModal();break;
-    case 'add-sh':openShModal();break;
+    case 'sug-chip':openQtyModal(btn.dataset.pid);break;
+    case 'sh-add-new':addNewCustomProduct(btn.dataset.name);break;
+    case 'toggle-ckd':ckdExpanded=!ckdExpanded;renderTab('shopping');break;
+    case 'add-sh':openQtyModal(null,null);break;
     case 'edit-sh':openShModal(id);break;
     case 'save-sh':saveSh(id||null);break;
     case 'toggle-sh':{
