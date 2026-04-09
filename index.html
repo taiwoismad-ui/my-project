@@ -411,7 +411,7 @@ let modalStack=[];
 let navBadges={shopping:0,wishlist:0,calendar:0,notes:0};
 let ckdExpanded=false;
 let shSearchQ='';
-let wlCollapsed={};
+let wlFilt='all';
 let hiddenProducts=new Set();
 let shViewTab='pick';
 
@@ -1090,35 +1090,30 @@ function rWlItem(it){
 
 function rWishlist(){
   const knownIds=new Set(WL_GROUPS.map(g=>g.id));
-  const grouped={};
-  WL.forEach(it=>{const g=(it.group&&knownIds.has(it.group))?it.group:'misc';if(!grouped[g])grouped[g]=[];grouped[g].push(it)});
+  const grpOf=it=>(it.group&&knownIds.has(it.group))?it.group:'misc';
+  const filtered=wlFilt==='all'?WL:WL.filter(it=>grpOf(it)===wlFilt);
   const undoneAll=WL.filter(i=>!i.done);
   const totalAll=undoneAll.reduce((s,i)=>s+(+i.price||0),0);
   const sub=WL.length===0?'Список пуст':`${undoneAll.length} позиций${totalAll?` · ${fmtPrice(totalAll)}`:''}`;
-  let body='';
-  WL_GROUPS.forEach(grp=>{
-    const items=grouped[grp.id]||[];
-    const undone=items.filter(i=>!i.done);
-    const gTotal=undone.reduce((s,i)=>s+(+i.price||0),0);
-    const collapsed=wlCollapsed[grp.id];
-    const meta=items.length?`${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}`:' Пусто';
-    body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="${grp.id}" data-lp-grp="1">
-      <div><span class="wl-group-name">${grp.label}</span><span class="wl-group-meta">${meta}</span></div>
-      <span class="ckd-toggle-icon${collapsed?'':' open'}">▼</span>
-    </div>`;
-    if(!collapsed && items.length){
-      body+=`<div class="wl-section">${items.map(rWlItem).join('')}</div>`;
-    }
-  });
-  if(!body) body=`<div class="empty"><div class="empty-ic">❤️</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`;
+  const filterChips=`<div style="display:flex;align-items:center;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
+    <div class="notes-filters" style="border:none;flex:1">
+      <button class="chip${wlFilt==='all'?' on':''}" data-wlg="all">Все</button>
+      ${WL_GROUPS.map(g=>{
+        const cnt=WL.filter(it=>grpOf(it)===g.id&&!it.done).length;
+        return`<button class="chip${wlFilt===g.id?' on':''}" data-wlg="${g.id}" data-lp-wlg="1">${g.label}${cnt?` <span style="font-size:11px;opacity:.75">${cnt}</span>`:''}</button>`;
+      }).join('')}
+    </div>
+    <button class="btn btn-sc btn-sm" data-a="add-wl-group" style="flex-shrink:0;margin:0 10px">+</button>
+  </div>`;
+  const rows=filtered.length
+    ?`<div class="wl-section" style="margin:12px 16px 100px">${filtered.map(rWlItem).join('')}</div>`
+    :`<div class="empty"><div class="empty-ic">❤️</div><div class="empty-t">Пусто</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`;
   return`<div class="page-hdr">
       <div><div class="page-title">Вишлист</div><div class="page-subtitle">${sub}</div></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-sc btn-sm" data-a="add-wl-group" style="white-space:nowrap">+ Группа</button>
-        <button class="btn-add" data-a="add-wl">+</button>
-      </div>
+      <button class="btn-add" data-a="add-wl">+</button>
     </div>
-    <div style="padding-bottom:100px">${body}</div>`;
+    ${filterChips}
+    ${rows}`;
 }
 
 function openWlModal(id=null){
@@ -1494,23 +1489,40 @@ function openNewWlGroupModal(){
   });
 }
 function deleteWlGroup(id){
-  if(DEFAULT_WL_GROUP_IDS.has(id)){toast('Нельзя удалить стандартную группу');return}
-  if(!confirm('Удалить группу?'))return;
-  db.ref('wishlistGroups/'+id).remove();
+  if(DEFAULT_WL_GROUP_IDS.has(id))return;
+  const grp=WL_GROUPS.find(g=>g.id===id);if(!grp)return;
+  openModal(`<div class="modal-title">Удалить группу?</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">«${grp.label}»</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">Товары останутся в «Разное»</div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-rd" id="wg-del-confirm">Удалить</button>
+    </div>`,
+  ov=>{
+    ov.querySelector('#wg-del-confirm').addEventListener('click',async()=>{
+      const upd={};
+      WL.filter(i=>i.group===id).forEach(i=>{upd[i.id+'/group']='misc'});
+      if(Object.keys(upd).length) await db.ref('wishlist').update(upd);
+      await db.ref('wishlistGroups/'+id).remove();
+      if(wlFilt===id)wlFilt='all';
+      closeModal();
+      toast('Группа удалена');
+    });
+  });
 }
 
 // ── LONG-PRESS ──
 let lpTimer=null,lpFired=false;
 document.addEventListener('pointerdown',e=>{
   const catChip=e.target.closest('.chip[data-lp-cat]');
-  const grpHdr=e.target.closest('.wl-group-hdr[data-lp-grp]');
+  const grpChip=e.target.closest('.chip[data-lp-wlg]');
   const sugChip=e.target.closest('.sug-chip[data-pid]');
-  if(!catChip&&!grpHdr&&!sugChip)return;
+  if(!catChip&&!grpChip&&!sugChip)return;
   lpFired=false;
   lpTimer=setTimeout(()=>{
     lpFired=true;lpTimer=null;
     if(catChip)deleteNoteCategory(catChip.dataset.nf);
-    else if(grpHdr)deleteWlGroup(grpHdr.dataset.gk);
+    else if(grpChip)deleteWlGroup(grpChip.dataset.wlg);
     else if(sugChip)showSugChipMenu(sugChip.dataset.pid);
   },500);
 });
@@ -1523,6 +1535,8 @@ document.addEventListener('click',function(e){
   if(tb){goTab(tb.dataset.tab);return}
   const nf=e.target.closest('[data-nf]');
   if(nf){if(lpFired){lpFired=false;return}nfilt=nf.dataset.nf;renderTab('notes');return}
+  const wlg=e.target.closest('[data-wlg]');
+  if(wlg){if(lpFired){lpFired=false;return}wlFilt=wlg.dataset.wlg;renderTab('wishlist');return}
   const cd=e.target.closest('.cal-day[data-date]');
   if(cd){calSel=cd.dataset.date;renderTab('calendar');return}
   const rc=e.target.closest('.chip[data-rec]');
@@ -1556,7 +1570,6 @@ document.addEventListener('click',function(e){
     case 'edit-wl':closeModal();openWlModal(id);break;
     case 'save-wl':saveWl(id||null);break;
     case 'del-wl':delWl(id);break;
-    case 'toggle-wlg':{if(lpFired){lpFired=false;break}const gk=btn.dataset.gk;wlCollapsed[gk]=!wlCollapsed[gk];renderTab('wishlist');break}
     case 'toggle-wl-done':{
       const it=WL.find(i=>i.id===id);
       if(it){db.ref('wishlist/'+id).update({done:!it.done,updatedAt:Date.now()});closeModal();}
