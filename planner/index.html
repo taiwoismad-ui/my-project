@@ -330,15 +330,16 @@ const USERS={
   wife:   {id:'wife',   name:'Катя',color:'#EC4899'}
 };
 const DEFAULT_NOTE_CATS=[
-  {id:'watch', label:'Что посмотреть', icon:'🎬', color:'#8B5CF6'},
-  {id:'food',  label:'Что поесть',     icon:'🍽️', color:'#F59E0B'},
-  {id:'ideas', label:'Идеи',           icon:'💡', color:'#60A5FA'},
-  {id:'other', label:'Другое',         icon:'📄', color:'#6B7280'},
+  {id:'watch',  label:'Что посмотреть', icon:'🎬', color:'#8B5CF6'},
+  {id:'food',   label:'Что поесть',     icon:'🍽️', color:'#F59E0B'},
+  {id:'places', label:'Куда сходить',   icon:'📍', color:'#60A5FA'},
+  {id:'other',  label:'Другое',         icon:'📄', color:'#6B7280'},
 ];
 const DEFAULT_NOTE_CAT_IDS=new Set(DEFAULT_NOTE_CATS.map(c=>c.id));
 const DEFAULT_WL_GROUPS=[
   {id:'dima',  label:'Для Димы'},
   {id:'katya', label:'Для Кати'},
+  {id:'home',  label:'Для дома'},
   {id:'max',   label:'Для Макса'},
   {id:'misc',  label:'Разное'},
 ];
@@ -403,7 +404,7 @@ const PRODUCT_CATALOG = [
 
 // ── STATE ──
 let currentUser=localStorage.getItem('fp_who')||null;
-let SH=[],EV=[],NO=[],WL=[],NOTE_CATS=[],WL_GROUPS=[];
+let SH=[],EV=[],NO=[],WL=[],NOTE_CATS=[...DEFAULT_NOTE_CATS],WL_GROUPS=[...DEFAULT_WL_GROUPS];
 let tab='shopping',nfilt='all';
 let calY=new Date().getFullYear(),calM=new Date().getMonth(),calSel=null;
 let modalStack=[];
@@ -667,14 +668,17 @@ async function loadAllData(){
   }
   const hpVal=hp.val()||{};
   hiddenProducts=new Set(Object.keys(hpVal).filter(k=>hpVal[k]));
-  if(!nc.val()){
-    const upd={};DEFAULT_NOTE_CATS.forEach(c=>upd[c.id]={label:c.label,icon:c.icon,color:c.color});
-    await db.ref('noteCategories').set(upd);NOTE_CATS=[...DEFAULT_NOTE_CATS];
-  }else{NOTE_CATS=buildNoteCats(nc.val())}
-  if(!wg.val()){
-    const upd={};DEFAULT_WL_GROUPS.forEach(g=>upd[g.id]={label:g.label});
-    await db.ref('wishlistGroups').set(upd);WL_GROUPS=[...DEFAULT_WL_GROUPS];
-  }else{WL_GROUPS=buildWlGroups(wg.val())}
+  const ncVal=nc.val()||{};
+  if(ncVal.ideas){delete ncVal.ideas;await db.ref('noteCategories/ideas').remove();}
+  const ncMissing={};
+  DEFAULT_NOTE_CATS.forEach(c=>{if(!ncVal[c.id])ncMissing[c.id]={label:c.label,icon:c.icon,color:c.color}});
+  if(Object.keys(ncMissing).length) await db.ref('noteCategories').update(ncMissing);
+  NOTE_CATS=buildNoteCats({...ncVal,...ncMissing});
+  const wgVal=wg.val()||{};
+  const wgMissing={};
+  DEFAULT_WL_GROUPS.forEach(g=>{if(!wgVal[g.id])wgMissing[g.id]={label:g.label}});
+  if(Object.keys(wgMissing).length) await db.ref('wishlistGroups').update(wgMissing);
+  WL_GROUPS=buildWlGroups({...wgVal,...wgMissing});
   renderTab(tab);
 }
 
@@ -1092,23 +1096,21 @@ function rWishlist(){
   const totalAll=undoneAll.reduce((s,i)=>s+(+i.price||0),0);
   const sub=WL.length===0?'Список пуст':`${undoneAll.length} позиций${totalAll?` · ${fmtPrice(totalAll)}`:''}`;
   let body='';
-  if(!WL.length){
-    body=`<div class="empty"><div class="empty-ic">❤️</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`;
-  } else {
-    WL_GROUPS.forEach(grp=>{
-      const items=grouped[grp.id];if(!items||!items.length)return;
-      const undone=items.filter(i=>!i.done);
-      const gTotal=undone.reduce((s,i)=>s+(+i.price||0),0);
-      const collapsed=wlCollapsed[grp.id];
-      body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="${grp.id}" data-lp-grp="1">
-        <div><span class="wl-group-name">${grp.label}</span><span class="wl-group-meta">${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}</span></div>
-        <span class="ckd-toggle-icon${collapsed?'':' open'}">▼</span>
-      </div>`;
-      if(!collapsed){
-        body+=`<div class="wl-section">${items.map(rWlItem).join('')}</div>`;
-      }
-    });
-  }
+  WL_GROUPS.forEach(grp=>{
+    const items=grouped[grp.id]||[];
+    const undone=items.filter(i=>!i.done);
+    const gTotal=undone.reduce((s,i)=>s+(+i.price||0),0);
+    const collapsed=wlCollapsed[grp.id];
+    const meta=items.length?`${undone.length} позиций${gTotal?` · ${fmtPrice(gTotal)}`:''}`:' Пусто';
+    body+=`<div class="wl-group-hdr" data-a="toggle-wlg" data-gk="${grp.id}" data-lp-grp="1">
+      <div><span class="wl-group-name">${grp.label}</span><span class="wl-group-meta">${meta}</span></div>
+      <span class="ckd-toggle-icon${collapsed?'':' open'}">▼</span>
+    </div>`;
+    if(!collapsed && items.length){
+      body+=`<div class="wl-section">${items.map(rWlItem).join('')}</div>`;
+    }
+  });
+  if(!body) body=`<div class="empty"><div class="empty-ic">❤️</div><div class="empty-t">Список пуст</div><div class="empty-s">Нажмите + чтобы добавить</div></div>`;
   return`<div class="page-hdr">
       <div><div class="page-title">Вишлист</div><div class="page-subtitle">${sub}</div></div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -1453,10 +1455,26 @@ function openNewCatModal(){
   });
 }
 function deleteNoteCategory(id){
-  if(DEFAULT_NOTE_CAT_IDS.has(id)){toast('Нельзя удалить стандартную категорию');return}
-  if(!confirm('Удалить категорию?'))return;
-  db.ref('noteCategories/'+id).remove();
-  if(nfilt===id){nfilt='all';renderTab('notes')}
+  if(DEFAULT_NOTE_CAT_IDS.has(id))return;
+  const cat=NOTE_CATS.find(c=>c.id===id);if(!cat)return;
+  openModal(`<div class="modal-title">Удалить категорию?</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">«${cat.label}»</div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">Заметки останутся в «Другое»</div>
+    <div class="modal-acts">
+      <button class="btn btn-sc" data-a="close-mo">Отмена</button>
+      <button class="btn btn-rd" id="nc-del-confirm">Удалить</button>
+    </div>`,
+  ov=>{
+    ov.querySelector('#nc-del-confirm').addEventListener('click',async()=>{
+      const upd={};
+      NO.filter(n=>n.category===id).forEach(n=>{upd[n.id+'/category']='other'});
+      if(Object.keys(upd).length) await db.ref('notes').update(upd);
+      await db.ref('noteCategories/'+id).remove();
+      if(nfilt===id)nfilt='all';
+      closeModal();
+      toast('Категория удалена');
+    });
+  });
 }
 function openNewWlGroupModal(){
   openModal(`<div class="modal-title">Новая группа</div>
