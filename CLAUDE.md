@@ -70,9 +70,26 @@
 
 ## Деплой
 Проект на GitHub: github.com/taiwoismad-ui/my-project
-Рабочая ветка: claude/family-planner-app-f2qBo
-Деплой через GitHub Actions — триггерится пушем в main.
-После пуша сайт обновляется через 1–2 минуты.
+
+### Структура веток
+- `gh-pages` — боевая ветка, именно отсюда GitHub Pages раздаёт сайт
+- `claude/*` — рабочие ветки сессий Claude (создаются автоматически)
+
+### Файл планировщика
+- Живёт в: `gh-pages/planner/index.html`
+- Статические ресурсы (иконки и т.п.): `gh-pages/planner/assets/`
+- Манифест PWA: `gh-pages/planner/manifest.json`
+
+### Как деплоить изменения
+1. Внести правки в `planner/index.html` на рабочей ветке
+2. Переключиться на `gh-pages`: `git checkout gh-pages`
+3. Скопировать файл из рабочей ветки:
+   `git show <рабочая-ветка>:index.html > planner/index.html`
+4. Закоммитить и запушить:
+   `git add planner/index.html && git commit -m "..." && git push origin gh-pages`
+5. Вернуться на рабочую ветку: `git checkout <рабочая-ветка>`
+
+Сайт обновляется через 1–2 минуты после пуша в `gh-pages`.
 
 ## После каждой задачи
 1. Скажи что именно сделано (списком)
