@@ -58,13 +58,13 @@ input,textarea{font-family:inherit;color:inherit}
 
 /* ── CONTENT ── */
 .content-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.panels{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.panels{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:80px}
 .panel{display:none}
 .panel.active{display:block;animation:fadeUp .15s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── BOTTOM NAV ── */
-.bottom-nav{background:var(--surface);border-top:1px solid var(--border);height:var(--bnh);padding-bottom:env(safe-area-inset-bottom,0);flex-shrink:0;display:flex;justify-content:space-around;align-items:center}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;width:100%;height:64px;background:var(--surface);border-top:1px solid var(--border);z-index:1000;display:flex;justify-content:space-around;align-items:center;padding-bottom:env(safe-area-inset-bottom,0)}
 .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 2px;cursor:pointer;transition:all var(--tr);color:var(--text-secondary);background:none;border:none;font-family:inherit;position:relative}
 .bn-item.on{color:var(--primary)}
 .bn-icon{display:flex;align-items:center;justify-content:center}
@@ -117,7 +117,7 @@ textarea.inp{resize:vertical;min-height:90px;line-height:1.6;font-size:15px}
 /* ── CHIPS / BADGE ── */
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px}
-.chip{padding:7px 14px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;background:var(--s2);color:var(--text-secondary);border:1.5px solid var(--border);font-family:inherit;transition:all .12s}
+.chip{padding:7px 14px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;background:var(--s2);color:var(--text-secondary);border:1.5px solid var(--border);font-family:inherit;transition:all .12s;white-space:nowrap;min-width:fit-content;display:inline-flex;align-items:center;gap:4px}
 .chip:hover{background:var(--s3);color:var(--text-primary)}
 .chip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
 
@@ -333,15 +333,15 @@ const DEFAULT_NOTE_CATS=[
   {id:'watch',  label:'Что посмотреть', icon:'🎬', color:'#8B5CF6'},
   {id:'food',   label:'Что поесть',     icon:'🍽️', color:'#F59E0B'},
   {id:'places', label:'Куда сходить',   icon:'📍', color:'#60A5FA'},
-  {id:'other',  label:'Другое',         icon:'📄', color:'#6B7280'},
+  {id:'other',  label:'Другое',         icon:'📝', color:'#6B7280'},
 ];
 const DEFAULT_NOTE_CAT_IDS=new Set(DEFAULT_NOTE_CATS.map(c=>c.id));
 const DEFAULT_WL_GROUPS=[
-  {id:'dima',  label:'Для Димы'},
-  {id:'katya', label:'Для Кати'},
-  {id:'home',  label:'Для дома'},
-  {id:'max',   label:'Для Макса'},
-  {id:'misc',  label:'Разное'},
+  {id:'dima',  label:'Для Димы',  emoji:'👨'},
+  {id:'katya', label:'Для Кати',  emoji:'👩'},
+  {id:'home',  label:'Для дома',  emoji:'🏠'},
+  {id:'max',   label:'Для Макса', emoji:'👦'},
+  {id:'misc',  label:'Разное',    emoji:'📦'},
 ];
 const DEFAULT_WL_GROUP_IDS=new Set(DEFAULT_WL_GROUPS.map(g=>g.id));
 const REC={none:'Без повтора',weekly:'Еженедельно',monthly:'Ежемесячно'};
@@ -616,7 +616,8 @@ async function startApp(){
 }
 
 function buildNoteCats(val){
-  const cats=Object.entries(val).map(([id,v])=>({id,label:v.label||'',icon:v.icon||'📌',color:v.color||'#6B7280'}));
+  const defIcon={watch:'🎬',food:'🍽️',places:'📍',other:'📝'};
+  const cats=Object.entries(val).map(([id,v])=>({id,label:v.label||'',icon:v.icon||defIcon[id]||'📌',color:v.color||'#6B7280'}));
   cats.sort((a,b)=>{
     const ai=DEFAULT_NOTE_CATS.findIndex(d=>d.id===a.id);
     const bi=DEFAULT_NOTE_CATS.findIndex(d=>d.id===b.id);
@@ -626,7 +627,8 @@ function buildNoteCats(val){
   return cats;
 }
 function buildWlGroups(val){
-  const groups=Object.entries(val).map(([id,v])=>({id,label:v.label||id}));
+  const defEmoji={dima:'👨',katya:'👩',home:'🏠',max:'👦',misc:'📦'};
+  const groups=Object.entries(val).map(([id,v])=>({id,label:v.label||id,emoji:v.emoji||defEmoji[id]||''}));
   groups.sort((a,b)=>{
     const ai=DEFAULT_WL_GROUPS.findIndex(d=>d.id===a.id);
     const bi=DEFAULT_WL_GROUPS.findIndex(d=>d.id===b.id);
@@ -676,9 +678,13 @@ async function loadAllData(){
   NOTE_CATS=buildNoteCats({...ncVal,...ncMissing});
   const wgVal=wg.val()||{};
   const wgMissing={};
-  DEFAULT_WL_GROUPS.forEach(g=>{if(!wgVal[g.id])wgMissing[g.id]={label:g.label}});
+  DEFAULT_WL_GROUPS.forEach(g=>{if(!wgVal[g.id])wgMissing[g.id]={label:g.label,emoji:g.emoji}});
   if(Object.keys(wgMissing).length) await db.ref('wishlistGroups').update(wgMissing);
   WL_GROUPS=buildWlGroups({...wgVal,...wgMissing});
+  // Patch: write emoji to existing default groups in Firebase if missing
+  const wgEmojiUpd={};
+  DEFAULT_WL_GROUPS.forEach(g=>{if(wgVal[g.id]&&!wgVal[g.id].emoji)wgEmojiUpd[g.id+'/emoji']=g.emoji});
+  if(Object.keys(wgEmojiUpd).length)db.ref('wishlistGroups').update(wgEmojiUpd);
   renderTab(tab);
 }
 
@@ -835,6 +841,72 @@ async function fetchEmojiFromClaude(name){
     const match=text.match(/(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/u);
     return match?match[0]:'🛒';
   }catch{return'🛒'}
+}
+function guessEmojiForCategory(name){
+  const n=name.toLowerCase();
+  const rules=[
+    ['посмотреть,фильм,сериал,кино','🎬'],
+    ['поесть,ресторан,кафе,еда','🍽️'],
+    ['сходить,место,куда','📍'],
+    ['купить,покупки','🛒'],
+    ['идея,идеи','💡'],
+    ['книга,читать','📚'],
+    ['музыка,слушать','🎵'],
+    ['путешествие,поездка,отпуск','✈️'],
+    ['спорт,тренировка','💪'],
+    ['работа,задача','💼'],
+  ];
+  for(const [keys,emoji] of rules){
+    if(keys.split(',').some(k=>n.includes(k)))return emoji;
+  }
+  return null;
+}
+function guessEmojiForWlGroup(name){
+  const n=name.toLowerCase();
+  const rules=[
+    ['дима,муж,папа','👨'],
+    ['катя,жена,мама','👩'],
+    ['макс,сын,ребенок,дети','👦'],
+    ['дом,квартира,ремонт','🏠'],
+    ['кот,кошка,питомец','🐱'],
+    ['разное','📦'],
+  ];
+  for(const [keys,emoji] of rules){
+    if(keys.split(',').some(k=>n.includes(k)))return emoji;
+  }
+  return null;
+}
+async function fetchEmojiFromClaudeForCat(name,promptType='category'){
+  if(!ANTHROPIC_API_KEY)return promptType==='group'?'📦':'📌';
+  const prompt=promptType==='group'
+    ?`Какой emoji подходит для группы вишлиста: «${name}»?`
+    :`Какой emoji подходит для категории заметок: «${name}»?`;
+  const sys=promptType==='group'
+    ?'Ты помогаешь подобрать emoji для группы вишлиста. Отвечай ТОЛЬКО одним emoji, без текста и пояснений.'
+    :'Ты помогаешь подобрать emoji для категории заметок. Отвечай ТОЛЬКО одним emoji, без текста и пояснений.';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'x-api-key':ANTHROPIC_API_KEY,
+        'anthropic-version':'2023-06-01',
+        'content-type':'application/json',
+        'anthropic-dangerous-allow-browser':'true',
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:10,
+        system:sys,
+        messages:[{role:'user',content:prompt}]
+      }),
+      signal:AbortSignal.timeout(8000)
+    });
+    if(!r.ok)return promptType==='group'?'📦':'📌';
+    const j=await r.json();
+    const text=j.content?.[0]?.text?.trim()||'';
+    const match=text.match(/(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/u);
+    return match?match[0]:promptType==='group'?'📦':'📌';
+  }catch{return promptType==='group'?'📦':'📌'}
 }
 function activeShNames(){
   return new Set(SH.filter(i=>!i.done).map(i=>i.name));
@@ -1100,7 +1172,11 @@ function rWishlist(){
       <button class="chip${wlFilt==='all'?' on':''}" data-wlg="all">Все</button>
       ${WL_GROUPS.map(g=>{
         const cnt=WL.filter(it=>grpOf(it)===g.id&&!it.done).length;
-        return`<button class="chip${wlFilt===g.id?' on':''}" data-wlg="${g.id}" data-lp-wlg="1">${g.label}${cnt?` <span style="font-size:11px;opacity:.75">${cnt}</span>`:''}</button>`;
+        const isDef=DEFAULT_WL_GROUP_IDS.has(g.id);
+        const isOn=wlFilt===g.id;
+        const emojiPfx=g.emoji?`${g.emoji} `:'';
+        const xBtn=isDef?'':` <span data-del-wlg="${g.id}" style="margin-left:2px;opacity:.45;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0">×</span>`;
+        return`<button class="chip${isOn?' on':''}" data-wlg="${g.id}" data-lp-wlg="1">${emojiPfx}${g.label}${cnt?` <span style="font-size:11px;opacity:.75">${cnt}</span>`:''}${xBtn}</button>`;
       }).join('')}
     </div>
     <button class="btn btn-sc btn-sm" data-a="add-wl-group" style="flex-shrink:0;margin:0 10px">+</button>
@@ -1122,7 +1198,7 @@ function openWlModal(id=null){
   const pri=normPri(it?.priority)||'medium';
   const priCols={high:'#EF4444',medium:'#F59E0B',low:'#10B981'};
   const priBtn=(k,lbl)=>`<button class="chip${pri===k?' on':''}" data-pri="${k}" style="${pri===k?`background:${priCols[k]};border-color:${priCols[k]};color:#fff`:''}">${lbl}</button>`;
-  const grpVal=it?.group||(WL_GROUPS[0]?.id||'misc');
+  const grpVal=it?.group||(wlFilt&&wlFilt!=='all'?wlFilt:WL_GROUPS[0]?.id||'misc');
   openModal(`<div class="modal-title">${it?'Редактировать':'Добавить в вишлист'}</div>
     <div class="fg"><label class="lbl">Ссылки</label>
       <div id="url-fields">${urlFieldsHtml(urls)}</div>
@@ -1149,6 +1225,8 @@ function openWlModal(id=null){
       <button class="btn btn-pr" data-a="save-wl" data-id="${id||''}">${it?'Сохранить':'Добавить'}</button>
     </div>`,
   ov=>{
+    const sel=ov.querySelector('#wl-group');
+    if(sel)sel.value=grpVal;
     attachUrlFieldEvents(ov,data=>{
       const ti=ov.querySelector('#wl-title');
       if(ti&&!ti.value&&data.title)ti.value=data.title;
@@ -1304,7 +1382,12 @@ function rNotes(){
   const filterChips=`<div style="display:flex;align-items:center;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
     <div class="notes-filters" style="border:none;flex:1">
       <button class="chip${nfilt==='all'?' on':''}" data-nf="all">Все</button>
-      ${NOTE_CATS.map(c=>`<button class="chip${nfilt===c.id?' on':''}" data-nf="${c.id}" data-lp-cat="1" style="${nfilt===c.id?`background:${c.color};border-color:${c.color};color:#fff`:''}">${c.icon} ${c.label}</button>`).join('')}
+      ${NOTE_CATS.map(c=>{
+        const isDef=DEFAULT_NOTE_CAT_IDS.has(c.id);
+        const isOn=nfilt===c.id;
+        const xBtn=isDef?'':` <span data-del-cat="${c.id}" style="margin-left:2px;opacity:.45;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0">×</span>`;
+        return`<button class="chip${isOn?' on':''}" data-nf="${c.id}" data-lp-cat="1" style="${isOn?`background:${c.color};border-color:${c.color};color:#fff`:''}">${c.icon} ${c.label}${xBtn}</button>`;
+      }).join('')}
     </div>
     <button class="btn btn-sc btn-sm" data-a="add-note-cat" style="flex-shrink:0;margin:0 10px">+</button>
   </div>`;
@@ -1441,11 +1524,19 @@ function openNewCatModal(){
       <button class="btn btn-pr" id="nc-save">Создать</button>
     </div>`,
   ov=>{
-    ov.querySelector('#nc-save').addEventListener('click',()=>{
+    ov.querySelector('#nc-save').addEventListener('click',async()=>{
       const label=ov.querySelector('#nc-label')?.value.trim();
       if(!label){toast('Введите название');return}
-      db.ref('noteCategories').push({label,icon:'📌',color});
+      const guessed=guessEmojiForCategory(label);
+      const icon=guessed||'⏳';
+      const ref=await db.ref('noteCategories').push({label,icon,color});
+      const newId=ref.key;
       closeModal();toast('✅ Категория добавлена');
+      if(!guessed){
+        fetchEmojiFromClaudeForCat(label,'category').then(em=>{
+          db.ref('noteCategories/'+newId).update({icon:em});
+        });
+      }
     });
   });
 }
@@ -1480,11 +1571,19 @@ function openNewWlGroupModal(){
       <button class="btn btn-pr" id="ng-save">Создать</button>
     </div>`,
   ov=>{
-    ov.querySelector('#ng-save').addEventListener('click',()=>{
+    ov.querySelector('#ng-save').addEventListener('click',async()=>{
       const label=ov.querySelector('#ng-label')?.value.trim();
       if(!label){toast('Введите название');return}
-      db.ref('wishlistGroups').push({label});
+      const guessed=guessEmojiForWlGroup(label);
+      const emoji=guessed||'⏳';
+      const ref=await db.ref('wishlistGroups').push({label,emoji});
+      const newId=ref.key;
       closeModal();toast('✅ Группа добавлена');
+      if(!guessed){
+        fetchEmojiFromClaudeForCat(label,'group').then(em=>{
+          db.ref('wishlistGroups/'+newId).update({emoji:em});
+        });
+      }
     });
   });
 }
@@ -1533,6 +1632,10 @@ document.addEventListener('pointercancel',()=>{if(lpTimer){clearTimeout(lpTimer)
 document.addEventListener('click',function(e){
   const tb=e.target.closest('[data-tab]');
   if(tb){goTab(tb.dataset.tab);return}
+  const delCat=e.target.closest('[data-del-cat]');
+  if(delCat){e.stopPropagation();deleteNoteCategory(delCat.dataset.delCat);return}
+  const delWlg=e.target.closest('[data-del-wlg]');
+  if(delWlg){e.stopPropagation();deleteWlGroup(delWlg.dataset.delWlg);return}
   const nf=e.target.closest('[data-nf]');
   if(nf){if(lpFired){lpFired=false;return}nfilt=nf.dataset.nf;renderTab('notes');return}
   const wlg=e.target.closest('[data-wlg]');
