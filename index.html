@@ -681,6 +681,10 @@ async function loadAllData(){
   DEFAULT_WL_GROUPS.forEach(g=>{if(!wgVal[g.id])wgMissing[g.id]={label:g.label,emoji:g.emoji}});
   if(Object.keys(wgMissing).length) await db.ref('wishlistGroups').update(wgMissing);
   WL_GROUPS=buildWlGroups({...wgVal,...wgMissing});
+  // Patch: write emoji to existing default groups in Firebase if missing
+  const wgEmojiUpd={};
+  DEFAULT_WL_GROUPS.forEach(g=>{if(wgVal[g.id]&&!wgVal[g.id].emoji)wgEmojiUpd[g.id+'/emoji']=g.emoji});
+  if(Object.keys(wgEmojiUpd).length)db.ref('wishlistGroups').update(wgEmojiUpd);
   renderTab(tab);
 }
 
@@ -1221,6 +1225,8 @@ function openWlModal(id=null){
       <button class="btn btn-pr" data-a="save-wl" data-id="${id||''}">${it?'Сохранить':'Добавить'}</button>
     </div>`,
   ov=>{
+    const sel=ov.querySelector('#wl-group');
+    if(sel)sel.value=grpVal;
     attachUrlFieldEvents(ov,data=>{
       const ti=ov.querySelector('#wl-title');
       if(ti&&!ti.value&&data.title)ti.value=data.title;
