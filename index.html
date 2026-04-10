@@ -413,6 +413,7 @@ let ckdExpanded=false;
 let shSearchQ='';
 let wlFilt='all';
 let hiddenProducts=new Set();
+let permanentlyHidden=new Set();
 let shViewTab='pick';
 
 // ── UTILS ──
@@ -645,7 +646,7 @@ function wlGroupLabelById(id){
 }
 
 async function loadAllData(){
-  const [s,w,n,c,pc,cp,nc,wg,hp]=await Promise.all([
+  const [s,w,n,c,pc,cp,nc,wg,hp,ph]=await Promise.all([
     db.ref('purchases').once('value'),
     db.ref('wishlist').once('value'),
     db.ref('notes').once('value'),
@@ -655,6 +656,7 @@ async function loadAllData(){
     db.ref('noteCategories').once('value'),
     db.ref('wishlistGroups').once('value'),
     db.ref('hiddenProducts').once('value'),
+    db.ref('permanentlyHidden').once('value'),
   ]);
   SH=snapToArr(s);
   WL=snapToArr(w);
@@ -670,6 +672,8 @@ async function loadAllData(){
   }
   const hpVal=hp.val()||{};
   hiddenProducts=new Set(Object.keys(hpVal).filter(k=>hpVal[k]));
+  const phVal=ph.val()||{};
+  permanentlyHidden=new Set(Object.keys(phVal).filter(k=>phVal[k]));
   const ncVal=nc.val()||{};
   if(ncVal.ideas){delete ncVal.ideas;await db.ref('noteCategories/ideas').remove();}
   const ncMissing={};
@@ -718,6 +722,11 @@ function setupFirebaseListeners(){
   db.ref('hiddenProducts').on('value',snap=>{
     const v=snap.val()||{};
     hiddenProducts=new Set(Object.keys(v).filter(k=>v[k]));
+    if(tab==='shopping')renderTab('shopping');
+  });
+  db.ref('permanentlyHidden').on('value',snap=>{
+    const v=snap.val()||{};
+    permanentlyHidden=new Set(Object.keys(v).filter(k=>v[k]));
     if(tab==='shopping')renderTab('shopping');
   });
   db.ref('noteCategories').on('value',snap=>{
@@ -782,7 +791,7 @@ function highlightNewItems(){
 // ── SHOPPING ──
 function sortedCatalog(){
   return [...PRODUCT_CATALOG]
-    .filter(p=>!hiddenProducts.has(p.id))
+    .filter(p=>!hiddenProducts.has(p.id)&&!permanentlyHidden.has(p.id))
     .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ru'));
 }
 function guessEmoji(name){
@@ -954,7 +963,7 @@ function rShopping(){
         <div id="sh-drop" class="sh-search-drop" style="display:none"></div>
       </div>
       <div class="sug-grid" id="sug-grid">${chips}</div>
-      ${hiddenProducts.size>0?`<div style="padding:4px 16px 16px"><button class="btn btn-sc btn-sm" data-a="restore-hidden">↩ Восстановить скрытые (${hiddenProducts.size})</button></div>`:''}`;
+      ${hiddenProducts.size>0?`<div style="padding:4px 16px 16px;display:flex;gap:8px"><button class="btn btn-sc btn-sm" data-a="restore-hidden">↩ Восстановить (${hiddenProducts.size})</button><button class="btn btn-rd btn-sm" data-a="clear-hidden-forever">🗑 Удалить навсегда</button></div>`:''}`;
   } else {
     const ckdHtml=ckd.length?`
       <div class="ckd-header" data-a="toggle-ckd">
@@ -1130,6 +1139,16 @@ function restoreHiddenProducts(){
   hiddenProducts.clear();
   if(tab==='shopping')renderTab('shopping');
   toast('✅ Скрытые товары восстановлены');
+}
+function clearHiddenForever(){
+  // Перемещаем все скрытые в permanentlyHidden и очищаем hiddenProducts
+  const updates={};
+  hiddenProducts.forEach(id=>{updates['permanentlyHidden/'+id]=true});
+  db.ref().update(updates).then(()=>db.ref('hiddenProducts').remove());
+  hiddenProducts.forEach(id=>permanentlyHidden.add(id));
+  hiddenProducts.clear();
+  if(tab==='shopping')renderTab('shopping');
+  toast('🗑 Товары удалены навсегда');
 }
 
 // ── WISHLIST ──
@@ -1653,6 +1672,7 @@ document.addEventListener('click',function(e){
     case 'sh-add-new':addNewCustomProduct(btn.dataset.name);break;
     case 'sh-view-tab':shViewTab=btn.dataset.stab;renderTab('shopping');break;
     case 'restore-hidden':restoreHiddenProducts();break;
+    case 'clear-hidden-forever':clearHiddenForever();break;
     case 'toggle-ckd':ckdExpanded=!ckdExpanded;renderTab('shopping');break;
     case 'add-sh':openQtyModal(null,null);break;
     case 'edit-sh':openShModal(id);break;
