@@ -268,6 +268,13 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:url("data:im
 @keyframes t-in{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes t-out{to{opacity:0}}
 
+/* ── PUSH TOAST — сверху, красивый ── */
+.push-toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1E293B;color:#fff;border-radius:14px;padding:14px 18px;z-index:99999;min-width:260px;max-width:calc(100% - 32px);pointer-events:none;box-shadow:0 4px 24px rgba(0,0,0,.3);animation:pt-in .25s cubic-bezier(.32,.72,0,1),pt-out .3s ease 4.7s forwards}
+@keyframes pt-in{from{opacity:0;transform:translateX(-50%) translateY(-14px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes pt-out{to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
+.push-toast-title{font-size:14px;font-weight:700;line-height:1.3}
+.push-toast-body{font-size:13px;opacity:.8;margin-top:3px;line-height:1.4}
+
 /* ── MISC ── */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -285,6 +292,7 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:url("data:im
 </style>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 </head>
 <body>
 <div id="app">
@@ -317,9 +325,14 @@ firebase.initializeApp({
   apiKey: "AIzaSyAPGOPCVbrOgjxDknYQqZ2VQG8olpDd9A0",
   authDomain: "family-planner-86c68.firebaseapp.com",
   databaseURL: "https://family-planner-86c68-default-rtdb.firebaseio.com",
-  projectId: "family-planner-86c68"
+  projectId: "family-planner-86c68",
+  messagingSenderId: "807824461716",
+  appId: "1:807824461716:web:c705726f8a4fe76b6b8981"
 });
 const db = firebase.database();
+// FCM может не поддерживаться в Safari вне PWA — ловим ошибку
+let messaging = null;
+try { messaging = firebase.messaging(); } catch(e) { console.log('FCM недоступен:', e.message); }
 
 // ── ANTHROPIC API KEY (set for smart emoji feature) ──
 const ANTHROPIC_API_KEY='';
@@ -464,6 +477,53 @@ function toast(msg){
   t.className='toast';t.textContent=msg;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),2400);
+}
+// Push-тост — появляется сверху, с заголовком и телом
+function showPushToast(title,body){
+  const t=document.createElement('div');
+  t.className='push-toast';
+  t.innerHTML=`<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:20px;flex-shrink:0">🛒</span><div><div class="push-toast-title">${title}</div>${body?`<div class="push-toast-body">${body}</div>`:''}</div></div>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),5200);
+}
+// Запрос разрешения на уведомления и сохранение FCM-токена в Firebase
+async function requestNotificationPermission(){
+  if(!messaging)return;
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission==='granted'){
+      const token=await messaging.getToken({vapidKey:'BPIz8G9ICofhd8t7AID00X62ckeDrSz_kZDV66XBOBagpHdl1rTZ5wH6DQJZ-MhvW5FQ_PjJZELmlUypT_5aXlM'});
+      await db.ref('fcmTokens/'+currentUser).set(token);
+      console.log('FCM токен сохранён для',currentUser);
+    }
+  }catch(err){console.log('Уведомления не разрешены:',err)}
+}
+// Отправка уведомления партнёру через Firebase (работает когда приложение открыто)
+async function notifyPartner(itemTitle){
+  const partnerRole=currentUser==='husband'?'wife':'husband';
+  const senderName=currentUser==='husband'?'Дима':'Катя';
+  await db.ref('notifications').push({
+    to:partnerRole,
+    title:'Новый товар в списке 🛒',
+    body:senderName+' добавил(а): '+itemTitle,
+    type:'purchase_added',
+    createdAt:Date.now()
+  });
+}
+// Кнопка "Отправить список" — уведомляет партнёра о количестве позиций
+function sendShoppingList(){
+  const unc=SH.filter(i=>!i.done);
+  if(!unc.length)return;
+  const partnerRole=currentUser==='husband'?'wife':'husband';
+  const senderName=currentUser==='husband'?'Дима':'Катя';
+  db.ref('notifications').push({
+    to:partnerRole,
+    title:'Список покупок готов 📋',
+    body:senderName+' отправил(а) список: '+unc.length+' позиций',
+    type:'list_ready',
+    createdAt:Date.now()
+  });
+  toast('✅ Список отправлен');
 }
 function domainOf(url){try{return new URL(url).hostname.replace(/^www\./,'')}catch{return url}}
 function fmtPrice(n){if(!n)return'';return(+n).toLocaleString('ru-RU')+' ₽'}
@@ -614,6 +674,8 @@ async function startApp(){
     await checkActivity();
   }catch(e){console.warn('Firebase error:',e)}
   setupFirebaseListeners();
+  // Запрашиваем разрешение на уведомления (не блокируем старт приложения)
+  setTimeout(()=>requestNotificationPermission().catch(()=>{}),2000);
 }
 
 function buildNoteCats(val){
@@ -737,6 +799,24 @@ function setupFirebaseListeners(){
     if(snap.val())WL_GROUPS=buildWlGroups(snap.val());
     if(tab==='wishlist')renderTab('wishlist');
   });
+  // Слушаем входящие уведомления от партнёра (когда приложение открыто)
+  const notifStart=Date.now();
+  db.ref('notifications').orderByChild('createdAt').startAt(notifStart).on('child_added',snap=>{
+    const notif=snap.val();
+    if(notif.to===currentUser){
+      showPushToast(notif.title,notif.body);
+      navigator.vibrate&&navigator.vibrate([200,100,200]);
+      snap.ref.remove(); // удаляем после показа — не накапливаем мусор
+    }
+  });
+  // Foreground FCM — когда приложение открыто и приходит FCM-сообщение
+  if(messaging){
+    messaging.onMessage(payload=>{
+      const{title,body}=payload.notification||{};
+      if(title)showPushToast(title,body||'');
+      navigator.vibrate&&navigator.vibrate([200,100,200]);
+    });
+  }
 }
 
 // ── ACTIVITY NOTIFICATIONS ──
@@ -977,7 +1057,8 @@ function rShopping(){
     content=`
       ${unc.length===0&&SH.length===0?`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Список пуст</div><div class="empty-s">Перейдите во вкладку «Выбрать»</div></div>`:''}
       ${unc.length?`<div style="padding:0 16px 4px"><div class="shop-list">${unc.map(rItem).join('')}</div></div>`:''}
-      <div style="padding:0 16px">${ckdHtml}</div>`;
+      <div style="padding:0 16px">${ckdHtml}</div>
+      ${unc.length?`<div style="padding:0 16px 8px"><button class="btn btn-fw" style="background:var(--primary-light);color:var(--primary);border:1.5px solid var(--primary);border-radius:12px;height:48px;font-size:15px" data-a="send-list">📤 Отправить список партнёру</button></div>`:''}`;
   }
 
   return`<div class="page-hdr">
@@ -1085,6 +1166,8 @@ function saveSh(id,prod,qty,unit){
       name:prod.name,emoji:prod.emoji,qty:qty||1,unit:unit||'шт',
       done:false,author:currentUser,createdAt:now,updatedAt:now
     });
+    // Уведомляем партнёра о новом товаре
+    notifyPartner(prod.name).catch(()=>{});
     // Increment count
     const ref=db.ref('productCounts/'+prod.id);
     ref.transaction(cur=>(cur||prod.count||1)+1);
@@ -1673,6 +1756,7 @@ document.addEventListener('click',function(e){
     case 'sh-view-tab':shViewTab=btn.dataset.stab;renderTab('shopping');break;
     case 'restore-hidden':restoreHiddenProducts();break;
     case 'clear-hidden-forever':clearHiddenForever();break;
+    case 'send-list':sendShoppingList();break;
     case 'toggle-ckd':ckdExpanded=!ckdExpanded;renderTab('shopping');break;
     case 'add-sh':openQtyModal(null,null);break;
     case 'edit-sh':openShModal(id);break;
@@ -1743,6 +1827,13 @@ function init(){
   else startApp();
 }
 document.addEventListener('DOMContentLoaded',init);
+
+// ── SERVICE WORKER ──
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/my-project/firebase-messaging-sw.js')
+    .then(reg=>console.log('SW зарегистрирован:',reg.scope))
+    .catch(err=>console.log('Ошибка SW:',err));
+}
 </script>
 </body>
 </html>
